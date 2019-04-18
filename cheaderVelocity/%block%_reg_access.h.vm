@@ -222,8 +222,8 @@ typedef enum {
 #set($poffset=$ids.get_prop($parent,"offset"))
 #if($pcount != " " && $pcount != "1")
 #mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($parent,"size"))
-#elseif($rcount != " " && $rcount != "1")
-#mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size"))
+##elseif($rcount != " " && $rcount != "1")
+##mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size"))
 #else
 #mDumpMacrosAsRegister($reg $poffset)
 #end
