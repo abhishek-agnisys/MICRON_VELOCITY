@@ -41,7 +41,7 @@
 #set($blkInstName=$chipName+$sep+$blockName)
 #set($top_name=$chipName+$sep+$blockName)
 /*************START INSTNAME:$chipName$sep$blockName:*************/
-#mDumpHeader($chipName,$blockName)
+#mDumpHeader($chipName,$blockName,$block)
 #$def BW_GET_REG_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset)            \
                   ((t*)(BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset)))
 #$def BW_GET_REG_IND_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset,index,el_size) \
@@ -65,7 +65,7 @@
 #set($blockName=$blockName.replace("_csr", ""))
 #set($blockName=$blockName.replace("_CSR", ""))
 /*************START INSTNAME: $blockName*************/
-#mDumpHeader("",$blockName)
+#mDumpHeader("",$blockName,$block)
 #$def BW_GET_REG_ADDR_${blockName.toUpperCase()}(t,offset)            \
                   ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset)))
 #$def BW_GET_REG_IND_ADDR_${blockName.toUpperCase()}(t,offset,index,el_size) \
@@ -373,8 +373,8 @@ typedef enum {
 #set($poffset=$ids.get_prop($parent,"offset"))
 #if($pcount != " " && $pcount != "1")
 #mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($parent,"size") $hiername)
-#elseif($rcount != " " && $rcount != "1")
-#mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size") $hiername)
+##elseif($rcount != " " && $rcount != "1")
+##mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size") $hiername)
 #else
 #mDumpMacrosAsRegister($reg $poffset $blkInstName $hiername)
 #end
@@ -564,7 +564,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 
 
 
-#macro(mDumpHeader $chipname $blockname)
+#macro(mDumpHeader $chipname $blockname $block)
 /******************************************************************************
 
     Copyright 2018 Micron Technology, Inc. All Rights Reserved.
@@ -572,7 +572,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.6
+    CHeader Ver 4.8
     Starting_IDS_version : 6.16.12.1
 
     Purpose:
@@ -580,6 +580,20 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 
     Description:
     <Put description here>
+
+#if($ids.get_prop($block,"orig_path") != " ")
+#set($path=$ids.get_prop($block,"orig_path"))
+#set($BlockName=$ids.get_prop($block,"name"))
+    file path for ${BlockName} : ${path}
+#else
+#foreach($sec in $ids.get_objects($block))
+#if(($ids.get_type($sec)=="reggroup") && ($ids.get_prop($sec,"type") == "subblock") && ($ids.get_prop($sec,"orig_path") != " "))
+#set($subpath=$ids.get_prop($sec,"orig_path"))
+#set($InstName=$ids.get_prop($sec,"name"))
+    file path for ${InstName} : ${subpath}
+#end
+#end
+#end
 
 ******************************************************************************/
 ${hash}ifndef __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_ACCESS_H__
