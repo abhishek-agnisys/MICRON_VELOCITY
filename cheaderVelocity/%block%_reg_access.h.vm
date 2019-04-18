@@ -1,0 +1,319 @@
+#*
+================================================================================
+
+1. This template is for the module-level header file u_<module>_reg_access.h.
+   The base unit is 32-bit (i.e. 32-bit for mem and emptyspace).
+2. No renaming is required on the output files after compilation, as the legacy
+   module name already contains the prefix "u_".
+3. This template works very well for both FM2 and PG4 because no register name
+   has to get prefixed with any string related to the project name/code.
+4. This tempalte supports two-level register declaration only excluding the top
+   level. However, only one of the 2nd or 3rd level is allowed to be repeated
+   due to only one address index is used throughout the pre-defined format.
+5. The object types and tree hierarchy of a module/block object are as follows.
+
+   1st => (TOP = the module/block)
+            |
+   2nd =>   +-------(reg)--------(reggroup)--------(mem)--------(emptyspace)
+                                     |               |
+   3rd =>                           reg             reg
+                                 emptyspace     emptyspace(?)
+6. The reggroup-inside-reggroup cases exist in XML exclusively (i.e. the object
+   "obj3" in this template) due to the format issue.
+
+================================================================================
+*#
+#set($top=$ids.get_top())
+#set($top_name=$ids.get_prop($top,"name"))
+#set($top_name=$top_name.replace("_csr", ""))
+#set($child=$ids.get_objects($top))
+#set($put="include")
+#set($def="define")
+#set($hash="#")
+#set($INT=0)
+#mDumpHeader()
+
+#mDumpRegistersFromTop()
+
+#macro(mDumpHeader)
+/******************************************************************************
+
+    Copyright 2018 Micron Technology, Inc. All Rights Reserved.
+    This software contains confidential information and trade secrets of
+    Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
+    without the prior express written permission of Micron Technology, Inc.
+
+	CHeader ver 3.2 (Block level)
+
+    Purpose:
+    <Put purpose here>
+
+    Description:
+    <Put description here>
+
+******************************************************************************/
+
+${hash}ifndef __${top_name.toUpperCase()}_REG_ACCESS_H__
+${hash}define __${top_name.toUpperCase()}_REG_ACCESS_H__
+
+
+#$put "global_types.h"
+#$put "global_instances.h"
+
+/****************************************************************************
+ *
+ *  MACRO         Basic macro to get the physical address of the register
+ *                bit field.
+ *
+ ***************************************************************************/
+
+#$def BW_GET_REG_ADDR_${top_name}(t,offset)            \
+                  ((t*)(BW_${top_name}_ADDRESS + (offset)))
+#$def BW_GET_REG_IND_ADDR_${top_name}(t,offset,index,el_size) \
+                  ((t*)(BW_${top_name}_ADDRESS + (offset) + (index) * (el_size)))
+#$def BW_GET_REG_IND_ADDR_VAL_${top_name}(offset,index,el_size) \
+                       (BW_${top_name}_ADDRESS + (offset) + (index) * (el_size))
+#end
+
+#macro(mDumpRegistersFromTop)
+#foreach($obj1 in $child)
+#set($type1=$ids.get_type($obj1))
+#if($type1 == "reg")
+#mDumpARegister($obj1 "false")
+#elseif($type1 == "mem")
+#mDumpAMemory($obj1)
+#elseif($type1 == "reggroup")
+#foreach($obj2 in $ids.get_objects($obj1))
+#if($ids.get_type($obj2) == "reg")
+#mDumpARegister($obj2 "true")
+#else
+#foreach($obj3 in $ids.get_objects($obj2))
+#set($type3=$ids.get_type($obj3))
+#if($type3 == "reg")
+#mDumpARegister($obj3 "true")
+#end
+#end
+#end
+#end
+#end
+#end
+
+
+${hash}endif // __${top_name.toUpperCase()}_REG_ACCESS_H__
+#end
+
+#macro(mDumpAMemory $sec)
+#set($mem_name=$ids.get_prop($sec,"name"))
+#set($off_str=$ids.get_prop($sec,"offset"))
+##set($reg_name=$ids.get_prop($sec,"name"))
+#set($reg_name=$ids.getHierarchicalName($sec))
+#if($off_str == " ")
+    #set($roffset=0)
+#else
+    #set($roffset=$INT.parseInt($off_str))
+#end
+#set($offset_dec=$roffset)
+#set($offset="0x" + $INT.toHexString($offset_dec))
+## COMMENTED FOR MEMORY WITH DEPTH 1 (MICRON)
+##set($words="0x" + $INT.toHexString($INT.parseInt($ids.get_prop($sec,"count"))))
+#if ($ids.get_prop($sec,"count") == " ")
+    #set($words="0x" + $INT.toHexString($INT.parseInt("1")))
+#else
+    #set($words="0x" + $INT.toHexString($INT.parseInt($ids.get_prop($sec,"count"))))
+#end
+/***********************************************************************/
+/***********************************************************************/
+/**********   $mem_name.toUpperCase()      D   E   F   I   N   E   S   **********/
+/***********************************************************************/
+/***********************************************************************/
+
+/****************************************************************************
+ *
+ *  TYPE          Memory:  $mem_name
+ *
+ *  DESCRIPTION   $ids.get_prop($sec, "doc")
+ *
+ ****************************************************************************/
+
+${hash}${def} ${top_name.toUpperCase()}_${mem_name.toUpperCase()}_ADDR (BW_${top_name.toUpperCase()}_ADDRESS + $offset)
+${hash}${def} ${top_name.toUpperCase()}_${mem_name.toUpperCase()}_WORDS $words
+
+#end
+
+
+#macro(mDumpARegister $reg $with_reggrp)
+    ##set($reg_name=$ids.get_prop($reg,"name"))
+    #set($reg_name=$ids.getHierarchicalName($reg))
+    #set($reg_width=$INT.parseInt($ids.get_prop($reg,"size")) * 8)
+
+/****************************************************************************
+*
+*  TYPE          Register access data structure of register $reg_name
+*                in component instance $top_name
+*
+*  DESCRIPTION     $ids.get_prop($reg, "doc")
+*
+****************************************************************************/
+
+typedef union bw_${top_name.toLowerCase()}__${reg_name.toLowerCase()}_acc_t {
+    struct {
+#foreach($field in $ids.get_fields($reg))
+        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+#end
+## COMMENTED FOR MICRON 31AugRelease
+##foreach($field in $ids.getReverseFieldList($reg))
+##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+##end
+    };
+    UINT${reg_width} reg;
+} BW_${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ACC_T;
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_${field_name.toUpperCase()}_SHIFT   $ids.get_prop($field, "low_offset")
+#end
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_name.toUpperCase()}_MASK  $ids.getFieldMask($field)
+#end
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+#set($defVal=$ids.convert_to_ids_num_type($ids.get_prop($field, "default")))
+${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE  $defVal
+#end
+
+${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}__POR_VALUE (\
+    #foreach($field in $ids.get_fields($reg))
+    #set($field_name=$ids.get_prop($field,"name"))
+    (${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE << ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_${field_name.toUpperCase()}_SHIFT) | \
+    #end
+    0)
+
+#foreach($field in $ids.get_fields($reg))
+#set($fieldName=$ids.get_prop($field,"name"))
+#if($ids.get_enums($field).size()== 0)
+#else
+typedef enum {
+#set($flag=0)
+#foreach($enum in $ids.get_enums($field))
+#if($flag == 1),
+#end
+#set($enum_name=$ids.get_prop($enum, "name"))
+    ${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${fieldName.toUpperCase()}__${enum_name} = $ids.convert_to_ids_num_type($ids.get_prop($enum,"text"))#set($flag=1)
+#end
+
+} ${top_name.toUpperCase()}_${reg_name.toUpperCase()}_${fieldName.toUpperCase()};
+#end
+#end
+
+/****************************************************************************
+ *
+ *  MACRO         Register access macros for $reg_name
+ *                in component instance $top_name
+ *
+ ****************************************************************************/
+
+#set($rcount=$ids.get_prop($reg,"count"))
+#if($with_reggrp == "true")
+#set($parent=$ids.get_parent($reg))
+#set($pcount=$ids.get_prop($parent,"count"))
+#set($poffset=$ids.get_prop($parent,"offset"))
+#if($pcount != " " && $pcount != "1")
+#mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($parent,"size"))
+#elseif($rcount != " " && $rcount != "1")
+#mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size"))
+#else
+#mDumpMacrosAsRegister($reg $poffset)
+#end
+#else
+#if($rcount != " " && $rcount != "1")
+#mDumpMacrosAsRegisterGroup($reg "0" $ids.get_prop($reg,"size"))
+#else
+#mDumpMacrosAsRegister($reg "0")
+#end
+#end
+#end
+
+
+#macro(mDumpMacrosAsRegisterGroup $reg $b $s)
+#set($gbase=$INT.parseInt($b))
+#set($el_size="0x" + $INT.toHexString($INT.parseInt($s)))
+#set($off_str=$ids.get_prop($reg,"offset"))
+#if($off_str == " ")
+#set($roffset=0)
+#else
+#set($roffset=$INT.parseInt($off_str))
+#end
+#set($offset_dec=$gbase + $roffset)
+#set($offset="0x" + $INT.toHexString($offset_dec))
+#set($sw_access=$ids.get_prop($reg,"sw"))
+#$def ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ADDR(index) \
+         (BW_GET_REG_IND_ADDR_VAL_$top_name(${offset}u,index,$el_size))
+#if($sw_access != "wo")
+#$def read_${top_name}__${reg_name}(index) \
+         ((BW_GET_REG_IND_ADDR_$top_name(BW_${top_name}__${reg_name}_acc_t,${offset}u,index,$el_size))->reg)
+#end
+#if($sw_access != "ro")
+#$def write_${top_name}__${reg_name}(index,val) \
+         (BW_GET_REG_IND_ADDR_$top_name(BW_${top_name}__${reg_name}_acc_t,${offset}u,index,$el_size))->reg = (UINT${reg_width})(val)
+#end
+#foreach($field in $ids.get_fields($reg))
+#if($ids.get_prop($field,"is_rsv") != "true")
+
+#set($fname=$ids.get_prop($field,"name"))
+#set($sw_access=$ids.get_prop($field,"sw_access"))
+#if($sw_access != "wo")
+#$def read_${top_name}__${reg_name}__$ids.get_prop($field,"name")(index) \
+         ((BW_GET_REG_IND_ADDR_$top_name(BW_${top_name}__${reg_name}_acc_t,${offset}u,index,$el_size))->$fname)
+#end
+#if($sw_access != "ro")
+#$def write_${top_name}__${reg_name}__$ids.get_prop($field,"name")(index,val) \
+         (BW_GET_REG_IND_ADDR_${top_name}(BW_${top_name}__${reg_name}_acc_t,${offset}u,index,$el_size))->$fname = (UINT${reg_width})(val)
+#end
+#end
+#end
+#end
+
+#macro(mDumpMacrosAsRegister $reg $b)
+#set($gbase=$INT.parseInt($b))
+#set($off_str=$ids.get_prop($reg,"offset"))
+##set($reg_name=$ids.get_prop($reg,"name"))
+#set($reg_name=$ids.getHierarchicalName($reg))
+#if($off_str == " ")
+    #set($roffset=0)
+#else
+    #set($roffset=$INT.parseInt($off_str))
+#end
+#set($offset_dec=$gbase + $roffset)
+#set($offset="0x" + $INT.toHexString($offset_dec).toUpperCase())
+#set($sw_access=$ids.get_prop($reg,"sw"))
+${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ADDR (BW_${top_name.toUpperCase()}_ADDRESS + $offset)
+#if($sw_access != "wo")
+${hash}${def} RD_${top_name.toUpperCase()}__${reg_name.toUpperCase()}() \
+         TIDAL_READ( ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ADDR )
+#end
+#if($sw_access != "ro")
+${hash}${def} WR_${top_name.toUpperCase()}__${reg_name.toUpperCase()}(val) \
+         TIDAL_WRITE( ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ADDR, val)
+#end
+
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+#if($ids.get_prop($field,"is_rsv") != "true")
+#set($sw_access=$ids.get_prop($field,"sw_access"))
+#if($sw_access != "wo")
+${hash}${def} RD_${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_name.toUpperCase()}() \
+         TIDAL_READ_FIELD( ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ADDR, BW_${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ACC_T, ${field_name})
+#end
+#if($sw_access != "ro")
+${hash}${def} WR_${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_name.toUpperCase()}(val) \
+         TIDAL_WRITE_FIELD( ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ADDR, BW_${top_name.toUpperCase()}__${reg_name.toUpperCase()}_ACC_T, ${field_name}, val)
+#end
+#end
+
+#end
+#end
+

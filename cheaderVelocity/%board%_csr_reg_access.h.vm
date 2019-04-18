@@ -1,0 +1,598 @@
+#*
+================================================================================
+
+1. This template is for the module-level header file u_<module>_reg_access.h.
+   The base unit is 32-bit (i.e. 32-bit for mem and emptyspace).
+2. No renaming is required on the output files after compilation, as the legacy
+   module name already contains the prefix "u_".
+3. This template works very well for both FM2 and PG4 because no register name
+   has to get prefixed with any string related to the project name/code.
+4. This tempalte supports two-level register declaration only excluding the top
+   level. However, only one of the 2nd or 3rd level is allowed to be repeated
+   due to only one address index is used throughout the pre-defined format.
+5. The object types and tree hierarchy of a module/block object are as follows.
+
+   1st => (TOP = the module/block)
+            |
+   2nd =>   +-------(reg)--------(reggroup)--------(mem)--------(emptyspace)
+                                     |               |
+   3rd =>                           reg             reg
+                                 emptyspace     emptyspace(?)
+6. The reggroup-inside-reggroup cases exist in XML exclusively (i.e. the object
+   "obj3" in this template) due to the format issue.
+
+================================================================================
+*#
+#set($hash="#")
+#set($top=$ids.get_top())
+#set($put="include")
+#set($def="define")
+#set($INT=0)
+#if($ids.get_type($top)=="board")
+#foreach($chip in $ids.get_objects($top))
+#if($ids.get_type($chip)=="chip")
+#set($chipName=$ids.get_prop($chip,"name"))
+#foreach($block in $ids.get_all_block($chip))
+#if($ids.get_type($block)=="block")
+#set($blockName=$ids.get_prop($block,"name"))
+#set($blockName=$blockName.replace("_csr", ""))
+#set($blockName=$blockName.replace("_CSR", ""))
+#set($sep="_")
+#set($blkInstName=$chipName+$sep+$blockName)
+#set($top_name=$chipName+$sep+$blockName)
+/*************START INSTNAME:$chipName$sep$blockName:*************/
+#mDumpHeader($chipName,$blockName)
+#$def BW_GET_REG_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset)            \
+                  ((t*)(BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset)))
+#$def BW_GET_REG_IND_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset,index,el_size) \
+                  ((t*)(BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size)))
+#$def BW_GET_REG_IND_ADDR_VAL_${chipName.toUpperCase()}_${blockName.toUpperCase()}(offset,index,el_size) \
+                       (BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size))
+
+#mDumpRegistersFromTop($block $blkInstName)
+#end
+#end
+
+#end
+#end
+#end
+
+
+#if($ids.get_type($top)=="chip")
+#foreach($block in $ids.get_all_block($chip))
+#if($ids.get_type($block)=="block")
+#set($blockName=$ids.get_prop($block,"name"))
+#set($blockName=$blockName.replace("_csr", ""))
+#set($blockName=$blockName.replace("_CSR", ""))
+/*************START INSTNAME: $blockName*************/
+#mDumpHeader("",$blockName)
+#$def BW_GET_REG_ADDR_${blockName.toUpperCase()}(t,offset)            \
+                  ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset)))
+#$def BW_GET_REG_IND_ADDR_${blockName.toUpperCase()}(t,offset,index,el_size) \
+                  ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size)))
+
+#mDumpRegistersFromTop($block $blockName)
+#end
+#end
+#end
+
+
+
+#macro(mDumpRegistersFromTop $block $blkInstName)
+#if($ids.get_type($block)=="block")
+#set($blockName=$ids.get_prop($block,"name"))
+#if($ids.get_type($top)=="board")
+#set($chipName=$ids.get_prop($ids.get_parent($block),"name"))
+#set($hierName=$chipName + "_" + $blockName)
+#elseif ($ids.get_type($top)=="chip")
+#set($hierName=$blockName)
+#end
+#set($hierName=$hierName.replace("_csr", ""))
+#set($hierName=$hierName.replace("_CSR", ""))
+#foreach($obj1 in $ids.get_objects($block))
+#set($type1=$ids.get_type($obj1))
+#if($type1 == "reg")
+#mDumpARegister($obj1 "false" $blkInstName)
+#elseif($type1 == "mem")
+#mDumpAMemory($obj1 $blkInstName)
+#elseif($type1 == "reggroup")
+#foreach($obj2 in $ids.get_objects($obj1))
+#if($ids.get_type($obj2) == "reg")
+#mDumpARegister($obj2 "true" $blkInstName)
+#elseif($ids.get_type($obj2) == "mem")
+#mDumpAMemory($obj2 $blkInstName)
+#elseif($ids.get_type($obj2) == "reggroup")
+#foreach($obj3 in $ids.get_objects($obj2))
+#if($ids.get_type($obj3) == "reg")
+#mDumpARegister($obj3 "true" $blkInstName)
+#elseif($ids.get_type($obj3) == "mem")
+#mDumpAMemory($obj3 $blkInstName)
+#else
+#foreach($obj4 in $ids.get_objects($obj3))
+#set($type4=$ids.get_type($obj4))
+#if($type4 == "reg")
+#mDumpARegister($obj4 "true" $blkInstName)
+#elseif($type4 == "mem")
+#mDumpAMemory($obj4 $blkInstName)
+#else
+#foreach($obj5 in $ids.get_objects($obj4))
+#set($type5=$ids.get_type($obj5))
+#if($type5 == "reg")
+#mDumpARegister($obj5 "true" $blkInstName)
+#elseif($type5 == "mem")
+#mDumpAMemory($obj5 $blkInstName)
+#else
+#foreach($obj6 in $ids.get_objects($obj5))
+#set($type6=$ids.get_type($obj6))
+#if($type6 == "reg")
+#mDumpARegister($obj6 "true" $blkInstName)
+#elseif($type6 == "mem")
+#mDumpAMemory($obj6 $blkInstName)
+#end
+#end
+#end
+#end
+#end
+#end
+#end
+#end
+#end
+#end
+#end
+#end
+#end
+${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
+#end
+
+
+#macro(mDumpAMemory $sec $blkInstName)
+#set($mem_name=$ids.get_prop($sec,"name"))
+#set($off_str=$ids.get_prop($sec,"offset"))
+#*
+#set($reg_nameMem=$ids.get_prop($sec,"name"))
+#set($blockNameMem=$ids.get_prop($ids.get_parent($sec),"name"))
+#if($ids.get_type($top)=="board")
+#set($BlockNode=$ids.get_parent($sec))
+#set($chipNameMem=$ids.get_prop($ids.get_parent($BlockNode),"name"))
+#set($uniqueNameMem=$chipNameMem + "_" + $blockNameMem)
+#else
+#set($uniqueNameMem=$blockNameMem)
+#end
+*#
+#if($off_str == " ")
+    #set($roffset=0)
+#else
+    #set($roffset=$INT.parseInt($off_str))
+#end
+#set($offset_dec=$roffset)
+#set($offset="0x" + $INT.toHexString($offset_dec))
+
+#set($parentNodeMem=$ids.get_parent($sec))
+#set($parent_off_str=$ids.get_prop($parentNodeMem,"offset"))
+#if($ids.get_type($parentNodeMem)!="block")
+#set($parent_roffset=$INT.parseInt($parent_off_str))
+#set($parent_offset_dec=$parent_roffset)
+#set($parent_offset="0x" + $INT.toHexString($parent_offset_dec))
+#set($offset = $parent_offset + " + " + $offset)
+#set($parentNameMem=$ids.get_prop($parentNodeMem,"name"))
+#set($ancestorNodeMem=$ids.get_parent($parentNodeMem))
+#set($ancestor_off_str=$ids.get_prop($ancestorNodeMem,"offset"))
+#if($ids.get_type($ancestorNodeMem)!="block")
+#set($ancestorNameMem=$ids.get_prop($ancestorNodeMem,"name"))
+#set($ancestor_roffset=$INT.parseInt($ancestor_off_str))
+#set($ancestor_offset_dec=$ancestor_roffset)
+#set($ancestor_offset="0x" + $INT.toHexString($ancestor_offset_dec))
+#set($offset = $ancestor_offset + " + " + $offset)
+#set($ancestorNodeMem1=$ids.get_parent($ancestorNodeMem))
+#set($ancestor_off_str1=$ids.get_prop($ancestorNodeMem1,"offset"))
+#if($ids.get_type($ancestorNodeMem1)!="block")
+#set($ancestorNameMem1=$ids.get_prop($ancestorNodeMem1,"name"))
+#set($ancestor_roffset1=$INT.parseInt($ancestor_off_str1))
+#set($ancestor_offset_dec1=$ancestor_roffset1)
+#set($ancestor_offset1="0x" + $INT.toHexString($ancestor_offset_dec1))
+#set($offset = $ancestor_offset1 + " + " + $offset)
+
+
+#set($ancestorNodeMem2=$ids.get_parent($ancestorNodeMem1))
+#set($ancestor_off_str2=$ids.get_prop($ancestorNodeMem2,"offset"))
+#if($ids.get_type($ancestorNodeMem2)!="block")
+#set($ancestorNameMem2=$ids.get_prop($ancestorNodeMem2,"name"))
+#set($ancestor_roffset2=$INT.parseInt($ancestor_off_str2))
+#set($ancestor_offset_dec2=$ancestor_roffset2)
+#set($ancestor_offset2="0x" + $INT.toHexString($ancestor_offset_dec2))
+#set($offset = $ancestor_offset2 + " + " + $offset)
+#set ($hiernameMem=$ancestorNameMem2+"_"+$ancestorNameMem1+"_"+$ancestorNameMem+"_"+$parentNameMem+"_"+$mem_name)
+#else
+#set ($hiernameMem=$ancestorNameMem1+"_"+$ancestorNameMem+"_"+$parentNameMem+"_"+$mem_name)
+#end
+#else
+#set ($hiernameMem=$ancestorNameMem+"_"+$parentNameMem+"_"+$mem_name)
+#end
+#else
+#set ($hiernameMem=$parentNameMem+"_"+$mem_name)
+#end
+#else
+#set($hiernameMem=$mem_name)
+#end
+#set($hiernameMem=$hiernameMem.replace("_csr", ""))
+#set($hiernameMem=$hiernameMem.replace("_CSR", ""))
+
+#*
+#if($off_str == " ")
+    #set($roffset=0)
+#else
+    #set($roffset=$INT.parseInt($off_str))
+#end
+#set($offset_dec=$roffset)
+#set($offset="0x" + $INT.toHexString($offset_dec))
+*#
+## COMMENTED FOR MEMORY WITH DEPTH 1 (MICRON)
+##set($words="0x" + $INT.toHexString($INT.parseInt($ids.get_prop($sec,"count"))))
+#if ($ids.get_prop($sec,"count") == " ")
+    #set($words="0x" + $INT.toHexString($INT.parseInt("1")))
+#else
+    #set($words="0x" + $INT.toHexString($INT.parseInt($ids.get_prop($sec,"count"))))
+#end
+/***********************************************************************/
+/***********************************************************************/
+/**********   ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}      D   E   F   I   N   E   S   **********/
+/***********************************************************************/
+/***********************************************************************/
+
+/****************************************************************************
+ *
+ *  TYPE          Memory:  ${blkInstName}_${hiernameMem}
+ *
+ *  DESCRIPTION   $ids.get_prop($sec, "doc")
+ *
+ ****************************************************************************/
+
+${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_ADDR (BW_${blkInstName.toUpperCase()}_ADDRESS + $offset)
+${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_WORDS $words
+#end
+
+
+#macro(mDumpARegister $reg $with_reggrp $blkInstName)
+    #set($reg_name=$ids.get_prop($reg,"name"))
+    #set($reg_width=$INT.parseInt($ids.get_prop($reg,"size")) * 8)
+#*
+#if($ids.get_type($top)=="board")
+#set ($hiername=$ids.getUniqueName($reg,"chip"))
+#elseif ($ids.get_type($top)=="chip")
+#set ($hiername=$ids.getUniqueName($reg,"block"))
+#elseif ($ids.get_type($top)=="block")
+#set ($hiername=$ids.getUniqueName($reg,"block"))
+#end
+*#
+#set($regName=$ids.get_prop($reg,"name"))
+#set($parentNode=$ids.get_parent($reg))
+#if($ids.get_type($parentNode)!="block")
+#set($parentName=$ids.get_prop($parentNode,"name"))
+#set($ancestorNode=$ids.get_parent($parentNode))
+#if($ids.get_type($ancestorNode)!="block")
+#set($ancestorName=$ids.get_prop($ancestorNode,"name"))
+#set($ancestorNode1=$ids.get_parent($ancestorNode))
+#if($ids.get_type($ancestorNode1)!="block")
+#set($ancestorName1=$ids.get_prop($ancestorNode1,"name"))
+#set($ancestorNode2=$ids.get_parent($ancestorNode1))
+#if($ids.get_type($ancestorNode2)!="block")
+#set($ancestorName2=$ids.get_prop($ancestorNode2,"name"))
+#set ($hiername=$ancestorName2+"_"+$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
+#else
+#set ($hiername=$ancestorName1 + $ancestorName+"_"+$parentName+"_"+$regName)
+#end
+#else
+#set ($hiername=$ancestorName+"_"+$parentName+"_"+$regName)
+#end
+#else
+#set ($hiername=$parentName+"_"+$regName)
+#end
+#else
+#set($hiername=$regName)
+#end
+
+#set($hiername=$hiername.replace("_csr", ""))
+#set($hiername=$hiername.replace("_CSR", ""))
+#set($parentName=$ids.get_prop($ids.get_parent($reg),"name"))
+
+
+/****************************************************************************
+*
+*  TYPE          Register access data structure of register $reg_name
+*                in component instance $parentName
+*
+*  DESCRIPTION     $ids.get_prop($reg, "doc")
+*
+****************************************************************************/
+
+typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
+    struct {
+#foreach($field in $ids.get_fields($reg))
+        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+#end
+## COMMENTED FOR MICRON 31AugRelease
+##foreach($field in $ids.getReverseFieldList($reg))
+##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+##end
+    };
+    UINT${reg_width} reg;
+} BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T;
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_SHIFT   $ids.get_prop($field, "low_offset")
+#end
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_MASK  $ids.getFieldMask($field)
+#end
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+####set($defVal="0b" + $ids.get_prop($field, "default"))
+#set($defVal="0x" + $ids.convertToHexType($ids.get_prop($field, "default")))
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE  $defVal
+#end
+
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__POR_VALUE (\
+    #foreach($field in $ids.get_fields($reg))
+    #set($field_name=$ids.get_prop($field,"name"))
+    (${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE << ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_SHIFT) | \
+    #end
+    0)
+
+#foreach($field in $ids.get_fields($reg))
+#set($fieldName=$ids.get_prop($field,"name"))
+#if($ids.get_enums($field).size()== 0)
+#else
+typedef enum {
+#set($flag=0)
+#foreach($enum in $ids.get_enums($field))
+#if($flag == 1),
+#end
+#set($enum_name=$ids.get_prop($enum, "name"))
+    ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fieldName.toUpperCase()}__${enum_name} = $ids.convert_to_ids_num_type($ids.get_prop($enum,"text"))#set($flag=1)
+#end
+
+} ${blkInstName.toUpperCase()}_${hiername.toUpperCase()}_${fieldName.toUpperCase()};
+#end
+#end
+
+/****************************************************************************
+ *
+ *  MACRO         Register access macros for $reg_name
+ *                in component instance $parentName
+ *
+ ****************************************************************************/
+
+#set($rcount=$ids.get_prop($reg,"count"))
+#if($with_reggrp == "true")
+#set($parent=$ids.get_parent($reg))
+#set($pcount=$ids.get_prop($parent,"count"))
+#set($poffset=$ids.get_prop($parent,"offset"))
+#if($pcount != " " && $pcount != "1")
+#mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($parent,"size") $hiername)
+#elseif($rcount != " " && $rcount != "1")
+#mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size") $hiername)
+#else
+#mDumpMacrosAsRegister($reg $poffset $blkInstName $hiername)
+#end
+#else
+#if($rcount != " " && $rcount != "1")
+#mDumpMacrosAsRegisterGroup($reg "0" $ids.get_prop($reg,"size") $hiername)
+#else
+#mDumpMacrosAsRegister($reg "0" $blkInstName $hiername)
+#end
+#end
+#end
+
+#macro(mDumpMacrosAsRegisterGroup $reg $b $s $hiername)
+#*
+#if($ids.get_type($top)=="board")
+#set ($hiername=$ids.getUniqueName($reg,"chip"))
+#elseif ($ids.get_type($top)=="chip"))
+#set ($hiername=$ids.getUniqueName($reg,"block"))
+#elseif ($ids.get_type($top)=="block"))
+#set ($hiername=$ids.getUniqueName($reg,"block"))
+#end
+*#
+#set($regName=$ids.get_prop($reg,"name"))
+#set($parentNode=$ids.get_parent($reg))
+#if($ids.get_type($parentNode)!="block")
+#set($parent_off_str=$ids.get_prop($parentNode,"offset"))
+#if($parent_off_str == " ")
+#set($parent_gbase=0)
+#else
+#set($parent_gbase=$INT.parseInt($parent_off_str))
+#end
+#set($ancestorNode=$ids.get_parent($parentNode))
+#if($ids.get_type($ancestorNode)!="block")
+#set($ancestor_off_str=$ids.get_prop($ancestorNode,"offset"))
+#if($ancestor_off_str == " ")
+#set($ancestor_gbase=0)
+#else
+#set($ancestor_gbase=$INT.parseInt($ancestor_off_str))
+#end
+#set($ancestorNode1=$ids.get_parent($ancestorNode))
+#if($ids.get_type($ancestorNode1)!="block")
+#set($ancestor_off_str1=$ids.get_prop($ancestorNode1,"offset"))
+#if($ancestor_off_str1 == " ")
+#set($ancestor_gbase1=0)
+#else
+#set($ancestor_gbase1=$INT.parseInt($ancestor_off_str1))
+#end
+#set($ancestorNode2=$ids.get_parent($ancestorNode1))
+#if($ids.get_type($ancestorNode2)!="block")
+#set($ancestor_off_str2=$ids.get_prop($ancestorNode2,"offset"))
+#if($ancestor_off_str2 == " ")
+#set($ancestor_gbase2=0)
+#else
+#set($ancestor_gbase2=$INT.parseInt($ancestor_off_str2))
+#end
+#set($gbase = $ancestor_gbase2+$ancestor_gbase1+$ancestor_gbase+$parent_gbase)
+#else
+#set($gbase = $ancestor_gbase1+$ancestor_gbase+$parent_gbase)
+#end
+#else
+#set($gbase = $ancestor_gbase+$parent_gbase)
+#end
+#else
+#set($gbase = $parent_gbase)
+#end
+#end
+
+
+##set($gbase=$INT.parseInt($b))
+#set($el_size="0x" + $INT.toHexString($INT.parseInt($s)))
+#set($off_str=$ids.get_prop($reg,"offset"))
+#if($off_str == " ")
+#set($roffset=0)
+#else
+#set($roffset=$INT.parseInt($off_str))
+#end
+##set($offset_dec=$gbase + $roffset)
+#set($offset_dec=0)
+#if($ids.get_type($parentNode)=="block")
+#set($offset_dec=$roffset)
+#else
+#set($offset_dec=$gbase + $roffset)
+#end
+#set($offset="0x" + $INT.toHexString($offset_dec))
+#set($sw_access=$ids.get_prop($reg,"sw"))
+
+#$def ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR(index) \
+         (BW_GET_REG_IND_ADDR_VAL_${top_name.toUpperCase()}(${offset}u,index,$el_size))
+#if($sw_access != "wo")
+#$def read_${blkInstName}__${hiername}(index) \
+         ((BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg)
+#end
+#if($sw_access != "ro")
+#$def write_${blkInstName}__${hiername}(index,val) \
+         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg = (UINT${reg_width})(val)
+#end
+#foreach($field in $ids.get_fields($reg))
+#if($ids.get_prop($field,"is_rsv") != "true")
+
+#set($fname=$ids.get_prop($field,"name"))
+#set($sw_access=$ids.get_prop($field,"sw_access"))
+#if($sw_access != "wo")
+#$def read_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index) \
+         ((BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname)
+#end
+#if($sw_access != "ro")
+#$def write_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index,val) \
+         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname = (UINT${reg_width})(val)
+#end
+#end
+#end
+#end
+
+#macro(mDumpMacrosAsRegister $reg $b $blkInstName $hiername)
+#*
+#if($ids.get_type($top)=="board")
+#set ($hiername=$ids.getUniqueName($reg,"chip"))
+#elseif ($ids.get_type($top)=="chip")
+#set ($hiername=$ids.getUniqueName($reg,"block"))
+#elseif ($ids.get_type($top)=="block")
+#set ($hiername=$ids.getUniqueName($reg,"block"))
+#end
+*#
+#set($totaladdrhier=0)
+#set($parentNode=$ids.get_parent($reg))
+#if($ids.get_type($parentNode)!="block")
+#set($sectionhier2=$ids.get_parent($parentNode))
+#if($ids.get_type($sectionhier2)!="block")
+#set($off_sec2=$ids.get_prop($sectionhier2,"offset"))
+#set($parseoff_sec2=$INT.parseInt($off_sec2))
+#set($totaladdrhier=$parseoff_sec2)
+#set($sectionhier3=$ids.get_parent($sectionhier2))
+#if($ids.get_type($sectionhier3)!="block")
+#set($off_sec3=$ids.get_prop($sectionhier3,"offset"))
+#set($parseoff_sec3=$INT.parseInt($off_sec3))
+#set($totaladdrhier=$parseoff_sec2 + $parseoff_sec3)
+#set($sectionhier4=$ids.get_parent($sectionhier3))
+#if($ids.get_type($sectionhier4)!="block")
+#set($off_sec4=$ids.get_prop($sectionhier4,"offset"))
+#set($parseoff_sec4=$INT.parseInt($off_sec4))
+#set($totaladdrhier=$parseoff_sec2 + $parseoff_sec3 + $parseoff_sec4)
+#end
+#end
+#end
+#end
+#set($gbase=$INT.parseInt($b))
+#set($off_str=$ids.get_prop($reg,"offset"))
+#set($reg_name=$ids.get_prop($reg,"name"))
+#if($off_str == " ")
+    #set($roffset=0)
+#else
+    #set($roffset=$INT.parseInt($off_str))
+#end
+#set($offset_dec=$gbase + $roffset + $totaladdrhier)
+#set($offset="0x" + $INT.toHexString($offset_dec).toUpperCase())
+#set($sw_access=$ids.get_prop($reg,"sw"))
+
+
+
+##${hash}${def} ${hiername.toUpperCase()}_ADDR (BW_${blkInstName.toUpperCase()}_ADDRESS + $offset)
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR (BW_${blkInstName.toUpperCase()}_ADDRESS + $offset)
+#if($sw_access != "wo")
+${hash}${def} RD_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}() \
+         TIDAL_READ( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR )
+#end
+#if($sw_access != "ro")
+${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}(val) \
+         TIDAL_WRITE( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR, val)
+#end
+
+
+#foreach($field in $ids.get_fields($reg))
+#set($field_name=$ids.get_prop($field,"name"))
+#if($ids.get_prop($field,"is_rsv") != "true")
+#set($sw_access=$ids.get_prop($field,"sw_access"))
+#if($sw_access != "wo")
+${hash}${def} RD_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}() \
+         TIDAL_READ_FIELD( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR, BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T, ${field_name})
+#end
+#if($sw_access != "ro")
+${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}(val) \
+         TIDAL_WRITE_FIELD( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR, BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T, ${field_name}, val)
+#end
+#end
+#end
+#end
+
+
+
+#macro(mDumpHeader $chipname $blockname)
+/******************************************************************************
+
+    Copyright 2018 Micron Technology, Inc. All Rights Reserved.
+    This software contains confidential information and trade secrets of
+    Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
+    without the prior express written permission of Micron Technology, Inc.
+
+    CHeader Ver 4.6
+    Starting_IDS_version : 6.16.12.1
+
+    Purpose:
+    <Put purpose here>
+
+    Description:
+    <Put description here>
+
+******************************************************************************/
+${hash}ifndef __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_ACCESS_H__
+${hash}define __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_ACCESS_H__
+
+
+#$put "global_types.h"
+#$put "global_instances.h"
+
+/****************************************************************************
+ *
+ *  MACRO         Basic macro to get the physical address of the register
+ *                bit field.
+ *
+ ***************************************************************************/
+#end
