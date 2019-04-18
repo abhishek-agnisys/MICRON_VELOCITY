@@ -43,7 +43,7 @@
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-	CHeader ver 3.2 (Block level)
+	CHeader ver 3.3 (Block level)
 
     Purpose:
     <Put purpose here>
@@ -184,6 +184,9 @@ ${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_name
 ${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE  $defVal
 #end
 
+${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_READMASK  $ids.getReadMask($reg)
+${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}_WRITEMASK  $ids.getWriteMask($reg)
+
 ${hash}${def} ${top_name.toUpperCase()}__${reg_name.toUpperCase()}__POR_VALUE (\
     #foreach($field in $ids.get_fields($reg))
     #set($field_name=$ids.get_prop($field,"name"))
@@ -316,4 +319,3 @@ ${hash}${def} WR_${top_name.toUpperCase()}__${reg_name.toUpperCase()}__${field_n
 
 #end
 #end
-

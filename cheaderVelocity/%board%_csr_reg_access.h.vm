@@ -328,6 +328,9 @@ ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_n
 ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_MASK  $ids.getFieldMask($field)
 #end
 
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_READMASK  $ids.getReadMask($reg)
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_WRITEMASK  $ids.getWriteMask($reg)
+
 #foreach($field in $ids.get_fields($reg))
 #set($field_name=$ids.get_prop($field,"name"))
 ####set($defVal="0b" + $ids.get_prop($field, "default"))
@@ -572,7 +575,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.6
+    CHeader Ver 4.7
     Starting_IDS_version : 6.16.12.1
 
     Purpose:
