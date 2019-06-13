@@ -22,7 +22,7 @@
 6. The reggroup-inside-reggroup cases exist in XML exclusively (i.e. the object
    "obj3" in this template) due to the format issue
 
-Cheader Ver 3.4
+Cheader Ver 3.8
 ================================================================================
 *#
 /*----------------------------------------------------------------------------------------------
