@@ -160,25 +160,6 @@ ${hash}${def} BW_${blockName.toUpperCase}_ADDRESS
 
 /****************************************************************************
  *
- *  TYPE          BW_instance_info_t
- *
- *  DESCRIPTION   Structure describing each component instance of chip_csr
- *
- ****************************************************************************/
-
- typedef struct BW_instance_info
-{
-  const UINT32             physAddr;    /** Physical address */
-  const UINT32             size;        /** Instance size in bytes */
-  const char                *comp_name;  /** Component name */
-  const char                *inst_name;  /** Component instance name */
-  const int                 num_of_regs; /** Number of registers */
-  const int                 reg_width;   /** Register width */
-  const BW_register_info_t  **regs;      /** Component register information */
-} BW_instance_info_t;
-
-/****************************************************************************
- *
  *  TYPE          BW_inst_index_t
  *
  *  DESCRIPTION   This emueration list allows indexing the BW_instance_info_t
@@ -225,7 +206,7 @@ ${hash}${def} BW_${blockName.toUpperCase}_ADDRESS
   BW_$blockName
   #end
 
- }
+ } BW_inst_index_t;
 
 
 /****************************************************************************
@@ -249,18 +230,6 @@ extern UINT32 BW_inst_addr[BW_NUM_INSTANCES];
  *
  ****************************************************************************/
 extern const char* BW_inst_name[BW_NUM_INSTANCES];
-
-/****************************************************************************
- *
- *  VARIABLE      BW_instances
- *  DESCRIPTION   Array of structures of BW_instance_info_t type
- *                that contain all information about the component instances
- *                This array can be indexed by the BW_inst_index_t enumeration
- *                values
- *
- ****************************************************************************/
-
-extern BW_instance_info_t BW_instances[BW_NUM_INSTANCES];
 
 #ifdef __cplusplus
 }
