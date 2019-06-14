@@ -577,8 +577,8 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 #end
 
 #macro(blockStruct $block $blkInstName $topBaseAddress)
-#set($BlockName=$ids.get_prop($block,"name"))
-typedef struct _${BlockName}Block_t
+##set($BlockName=$ids.get_prop($block,"name"))
+typedef struct _${blkInstName}_Block_t
 {
 #foreach($obj in $ids.get_objects($block))
 #set($obj_type=$ids.get_type($obj))
@@ -611,9 +611,9 @@ typedef struct _${BlockName}Block_t
 #end
 #end
 #end
-} ${BlockName}Block_t;
+} ${blkInstName}_Block_t;
 
-typedef ${BlockName}Block_t* p${BlockName}Block = const (${topBaseAddress});
+typedef ${blkInstName}_Block_t* p${blkInstName}_Block = const (${topBaseAddress});
 #end
 
 #macro(mblockStructFiller $emptyObj $block $StartAddr $EndAddr)
@@ -818,7 +818,7 @@ ${FillerType}#end
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.10
+    CHeader Ver 4.12
     Starting_IDS_version : 6.18.0.156
 
     Purpose:
