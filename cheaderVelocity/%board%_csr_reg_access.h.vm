@@ -304,12 +304,31 @@ ${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_WORDS $w
 *  DESCRIPTION     $ids.get_prop($reg, "doc")
 *
 ****************************************************************************/
-
+#set($currLowOffset=0)
+#set($LowOffset=0)
 typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
     struct {
 #foreach($field in $ids.get_fields($reg))
+#set($LowOffset = $INT.parseInt($ids.get_prop($field,"low_offset")))
+#if(($LowOffset - $currLowOffset) == 0)
+        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+#else
+#set($resv_width = ($LowOffset - $currLowOffset))
+        UINT${reg_width}  resv${currLowOffset} : ${resv_width};
         UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 #end
+#set($currLowOffset = ($LowOffset + $INT.parseInt($ids.get_prop($field,"size"))))
+#end
+#if(($reg_width - $currLowOffset) != 0)
+#set($resv_end_width = ($reg_width - $currLowOffset))
+        UINT${reg_width}  resv${currLowOffset} : ${resv_end_width};
+#end
+## COMMENTED FOR RESERVED FIELD BITS (TICKET 5549) 2July19
+##typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
+##    struct {
+##foreach($field in $ids.get_fields($reg))
+##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+##end
 ## COMMENTED FOR MICRON 31AugRelease
 ##foreach($field in $ids.getReverseFieldList($reg))
 ##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
