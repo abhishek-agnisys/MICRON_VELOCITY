@@ -41,12 +41,12 @@
 #set($blkInstName=$chipName+$sep+$blockName)
 #set($top_name=$chipName+$sep+$blockName)
 /*************START INSTNAME:$chipName$sep$blockName:*************/
-#mDumpHeader($chipName,$blockName,$block)
+#mDumpHeader($chipName,$blockName)
 #$def BW_GET_REG_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset)            \
                   ((t*)(BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset)))
 #$def BW_GET_REG_IND_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset,index,el_size) \
                   ((t*)(BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size)))
-#$def BW_GET_REG_IND_ADDR_VAL_${chipName.toUpperCase()}_${blockName.toUpperCase()}(offset,index,el_size) \
+#$def BW_GET_REG_IND_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}_csr(offset,index,el_size) \
                        (BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size))
 
 #mDumpRegistersFromTop($block $blkInstName)
@@ -65,7 +65,7 @@
 #set($blockName=$blockName.replace("_csr", ""))
 #set($blockName=$blockName.replace("_CSR", ""))
 /*************START INSTNAME: $blockName*************/
-#mDumpHeader("",$blockName,$block)
+#mDumpHeader("",$blockName)
 #$def BW_GET_REG_ADDR_${blockName.toUpperCase()}(t,offset)            \
                   ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset)))
 #$def BW_GET_REG_IND_ADDR_${blockName.toUpperCase()}(t,offset,index,el_size) \
@@ -352,7 +352,7 @@ typedef enum {
 #if($flag == 1),
 #end
 #set($enum_name=$ids.get_prop($enum, "name"))
-    ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fieldName.toUpperCase()}__${enum_name} = $ids.convert_to_ids_num_type($ids.get_prop($enum,"text"))#set($flag=1)
+    ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fieldName.toUpperCase()}__${enum_name} = $ids.get_prop($enum,"text")#set($flag=1)
 #end
 
 } ${blkInstName.toUpperCase()}_${hiername.toUpperCase()}_${fieldName.toUpperCase()};
@@ -373,8 +373,6 @@ typedef enum {
 #set($poffset=$ids.get_prop($parent,"offset"))
 #if($pcount != " " && $pcount != "1")
 #mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($parent,"size") $hiername)
-##elseif($rcount != " " && $rcount != "1")
-##mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size") $hiername)
 #else
 #mDumpMacrosAsRegister($reg $poffset $blkInstName $hiername)
 #end
@@ -462,7 +460,7 @@ typedef enum {
 #set($sw_access=$ids.get_prop($reg,"sw"))
 
 #$def ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR(index) \
-         (BW_GET_REG_IND_ADDR_VAL_${top_name.toUpperCase()}(${offset}u,index,$el_size))
+         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}_csr(${offset}u,index,$el_size))
 #if($sw_access != "wo")
 #$def read_${blkInstName}__${hiername}(index) \
          ((BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg)
@@ -564,7 +562,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 
 
 
-#macro(mDumpHeader $chipname $blockname $block)
+#macro(mDumpHeader $chipname $blockname)
 /******************************************************************************
 
     Copyright 2018 Micron Technology, Inc. All Rights Reserved.
@@ -572,7 +570,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.8
+    CHeader Ver 4.6
     Starting_IDS_version : 6.16.12.1
 
     Purpose:
@@ -580,20 +578,6 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 
     Description:
     <Put description here>
-
-#if($ids.get_prop($block,"orig_path") != " ")
-#set($path=$ids.get_prop($block,"orig_path"))
-#set($BlockName=$ids.get_prop($block,"name"))
-    file path for ${BlockName} : ${path}
-#else
-#foreach($sec in $ids.get_objects($block))
-#if(($ids.get_type($sec)=="reggroup") && ($ids.get_prop($sec,"type") == "subblock") && ($ids.get_prop($sec,"orig_path") != " "))
-#set($subpath=$ids.get_prop($sec,"orig_path"))
-#set($InstName=$ids.get_prop($sec,"name"))
-    file path for ${InstName} : ${subpath}
-#end
-#end
-#end
 
 ******************************************************************************/
 ${hash}ifndef __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_ACCESS_H__

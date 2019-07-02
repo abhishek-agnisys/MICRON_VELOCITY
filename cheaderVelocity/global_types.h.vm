@@ -22,7 +22,7 @@
 6. The reggroup-inside-reggroup cases exist in XML exclusively (i.e. the object
    "obj3" in this template) due to the format issue.
 
-Cheader Ver 3.4
+Cheader Ver 3.2
 ================================================================================
 */
 ]]#
@@ -46,6 +46,7 @@ Cheader Ver 3.4
 #define __GLOBAL_TYPES_H
 
 typedef unsigned char      UINT8;
+typedef unsigned short     UINT16;
 typedef unsigned int       UINT32;
 typedef unsigned long long UINT64;
 
