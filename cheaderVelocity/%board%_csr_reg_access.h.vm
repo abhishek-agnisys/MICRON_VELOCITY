@@ -24,6 +24,7 @@
 ================================================================================
 *#
 #set($hash="#")
+$ids.init_cheader()
 #set($top=$ids.get_top())
 #set($put="include")
 #set($def="define")
@@ -41,15 +42,16 @@
 #set($blkInstName=$chipName+$sep+$blockName)
 #set($top_name=$chipName+$sep+$blockName)
 /*************START INSTNAME:$chipName$sep$blockName:*************/
-#mDumpHeader($chipName,$blockName)
+#mDumpHeader($chipName,$blockName,$block)
 #$def BW_GET_REG_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset)            \
                   ((t*)(BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset)))
 #$def BW_GET_REG_IND_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}(t,offset,index,el_size) \
                   ((t*)(BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size)))
-#$def BW_GET_REG_IND_ADDR_${chipName.toUpperCase()}_${blockName.toUpperCase()}_csr(offset,index,el_size) \
+#$def BW_GET_REG_IND_ADDR_VAL_${chipName.toUpperCase()}_${blockName.toUpperCase()}(offset,index,el_size) \
                        (BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size))
 
 #mDumpRegistersFromTop($block $blkInstName)
+${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 #end
 #end
 
@@ -65,13 +67,14 @@
 #set($blockName=$blockName.replace("_csr", ""))
 #set($blockName=$blockName.replace("_CSR", ""))
 /*************START INSTNAME: $blockName*************/
-#mDumpHeader("",$blockName)
+#mDumpHeader("",$blockName,$block)
 #$def BW_GET_REG_ADDR_${blockName.toUpperCase()}(t,offset)            \
                   ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset)))
 #$def BW_GET_REG_IND_ADDR_${blockName.toUpperCase()}(t,offset,index,el_size) \
                   ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size)))
 
 #mDumpRegistersFromTop($block $blockName)
+${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 #end
 #end
 #end
@@ -141,12 +144,12 @@
 #end
 #end
 #end
-${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 #end
 
 
 #macro(mDumpAMemory $sec $blkInstName)
 #set($mem_name=$ids.get_prop($sec,"name"))
+#set($reg_width=$INT.parseInt($ids.get_prop($sec,"size")) * 8)
 #set($off_str=$ids.get_prop($sec,"offset"))
 #*
 #set($reg_nameMem=$ids.get_prop($sec,"name"))
@@ -249,6 +252,13 @@ ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 
 ${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_ADDR (BW_${blkInstName.toUpperCase()}_ADDRESS + $offset)
 ${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_WORDS $words
+
+typedef union bw_${blkInstName.toLowerCase()}__${hiernameMem.toLowerCase()}_acc_t {
+    struct {
+        uint${reg_width}_t  $ids.get_prop($sec,"name")  : $reg_width;
+    };
+    uint${reg_width}_t reg;
+} BW_${blkInstName.toUpperCase()}__${hiernameMem.toUpperCase()}_ACC_T;
 #end
 
 
@@ -279,7 +289,7 @@ ${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_WORDS $w
 #set($ancestorName2=$ids.get_prop($ancestorNode2,"name"))
 #set ($hiername=$ancestorName2+"_"+$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
 #else
-#set ($hiername=$ancestorName1 + $ancestorName+"_"+$parentName+"_"+$regName)
+#set ($hiername=$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
 #end
 #else
 #set ($hiername=$ancestorName+"_"+$parentName+"_"+$regName)
@@ -304,37 +314,18 @@ ${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_WORDS $w
 *  DESCRIPTION     $ids.get_prop($reg, "doc")
 *
 ****************************************************************************/
-#set($currLowOffset=0)
-#set($LowOffset=0)
+
 typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
     struct {
 #foreach($field in $ids.get_fields($reg))
-#set($LowOffset = $INT.parseInt($ids.get_prop($field,"low_offset")))
-#if(($LowOffset - $currLowOffset) == 0)
-        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
-#else
-#set($resv_width = ($LowOffset - $currLowOffset))
-        UINT${reg_width}  resv${currLowOffset} : ${resv_width};
-        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+        uint${reg_width}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 #end
-#set($currLowOffset = ($LowOffset + $INT.parseInt($ids.get_prop($field,"size"))))
-#end
-#if(($reg_width - $currLowOffset) != 0)
-#set($resv_end_width = ($reg_width - $currLowOffset))
-        UINT${reg_width}  resv${currLowOffset} : ${resv_end_width};
-#end
-## COMMENTED FOR RESERVED FIELD BITS (TICKET 5549) 2July19
-##typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
-##    struct {
-##foreach($field in $ids.get_fields($reg))
-##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
-##end
 ## COMMENTED FOR MICRON 31AugRelease
 ##foreach($field in $ids.getReverseFieldList($reg))
 ##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 ##end
     };
-    UINT${reg_width} reg;
+    uint${reg_width}_t reg;
 } BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T;
 
 #foreach($field in $ids.get_fields($reg))
@@ -347,6 +338,9 @@ ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_n
 ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_MASK  $ids.getFieldMask($field)
 #end
 
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_READMASK  $ids.getReadMask($reg)
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_WRITEMASK  $ids.getWriteMask($reg)
+																									  
 #foreach($field in $ids.get_fields($reg))
 #set($field_name=$ids.get_prop($field,"name"))
 ####set($defVal="0b" + $ids.get_prop($field, "default"))
@@ -371,7 +365,7 @@ typedef enum {
 #if($flag == 1),
 #end
 #set($enum_name=$ids.get_prop($enum, "name"))
-    ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fieldName.toUpperCase()}__${enum_name} = $ids.get_prop($enum,"text")#set($flag=1)
+    ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fieldName.toUpperCase()}__${enum_name} = $ids.convert_to_ids_num_type($ids.get_prop($enum,"text"))#set($flag=1)
 #end
 
 } ${blkInstName.toUpperCase()}_${hiername.toUpperCase()}_${fieldName.toUpperCase()};
@@ -392,6 +386,9 @@ typedef enum {
 #set($poffset=$ids.get_prop($parent,"offset"))
 #if($pcount != " " && $pcount != "1")
 #mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($parent,"size") $hiername)
+## UNCOMMENTED FOR REPEATED REG INSIDE SECTION (5553: 4July)
+#elseif($rcount != " " && $rcount != "1")
+#mDumpMacrosAsRegisterGroup($reg $poffset $ids.get_prop($reg,"size") $hiername)
 #else
 #mDumpMacrosAsRegister($reg $poffset $blkInstName $hiername)
 #end
@@ -479,14 +476,14 @@ typedef enum {
 #set($sw_access=$ids.get_prop($reg,"sw"))
 
 #$def ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR(index) \
-         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}_csr(${offset}u,index,$el_size))
+         (BW_GET_REG_IND_ADDR_VAL_${top_name.toUpperCase()}(${offset}u,index,$el_size))
 #if($sw_access != "wo")
 #$def read_${blkInstName}__${hiername}(index) \
          ((BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg)
 #end
 #if($sw_access != "ro")
 #$def write_${blkInstName}__${hiername}(index,val) \
-         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg = (UINT${reg_width})(val)
+         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg = (uint${reg_width}_t)(val)
 #end
 #foreach($field in $ids.get_fields($reg))
 #if($ids.get_prop($field,"is_rsv") != "true")
@@ -499,7 +496,7 @@ typedef enum {
 #end
 #if($sw_access != "ro")
 #$def write_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index,val) \
-         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname = (UINT${reg_width})(val)
+         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname = (uint${reg_width}_t)(val)
 #end
 #end
 #end
@@ -581,7 +578,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 
 
 
-#macro(mDumpHeader $chipname $blockname)
+#macro(mDumpHeader $chipname $blockname $block)
 /******************************************************************************
 
     Copyright 2018 Micron Technology, Inc. All Rights Reserved.
@@ -589,14 +586,28 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.16
-    Starting_IDS_version : 6.16.12.1
+    CHeader Ver 4.18
+    Starting_IDS_version : 6.20.0.0
 
     Purpose:
     <Put purpose here>
 
     Description:
     <Put description here>
+
+#if($ids.get_prop($block,"orig_path") != " ")
+#set($path=$ids.get_prop($block,"orig_path"))
+#set($BlockName=$ids.get_prop($block,"name"))
+    file path for ${BlockName} : ${path}
+#else
+#foreach($sec in $ids.get_objects($block))
+#if(($ids.get_type($sec)=="reggroup") && ($ids.get_prop($sec,"type") == "subblock") && ($ids.get_prop($sec,"orig_path") != " "))
+#set($subpath=$ids.get_prop($sec,"orig_path"))
+#set($InstName=$ids.get_prop($sec,"name"))
+    file path for ${InstName} : ${subpath}
+#end
+#end
+#end
 
 ******************************************************************************/
 ${hash}ifndef __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_ACCESS_H__

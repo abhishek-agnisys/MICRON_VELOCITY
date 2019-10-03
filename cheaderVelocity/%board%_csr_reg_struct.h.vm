@@ -1,0 +1,348 @@
+#*
+================================================================================
+
+1. This template is for the module-level header file u_<module>_reg_access.h.
+   The base unit is 32-bit (i.e. 32-bit for mem and emptyspace).
+2. No renaming is required on the output files after compilation, as the legacy
+   module name already contains the prefix "u_".
+3. This template works very well for both FM2 and PG4 because no register name
+   has to get prefixed with any string related to the project name/code.
+4. This tempalte supports two-level register declaration only excluding the top
+   level. However, only one of the 2nd or 3rd level is allowed to be repeated
+   due to only one address index is used throughout the pre-defined format.
+5. The object types and tree hierarchy of a module/block object are as follows.
+
+   1st => (TOP = the module/block)
+            |
+   2nd =>   +-------(reg)--------(reggroup)--------(mem)--------(emptyspace)
+                                     |               |
+   3rd =>                           reg             reg
+                                 emptyspace     emptyspace(?)
+6. The reggroup-inside-reggroup cases exist in XML exclusively (i.e. the object
+   "obj3" in this template) due to the format issue.
+
+================================================================================
+*#
+#set($hash="#")
+$ids.init_cheader()
+#set($top=$ids.get_top())
+#set($put="include")
+#set($def="define")
+#set($INT=0)
+##set($filler_count=0)
+#if($ids.get_type($top)=="board")
+#foreach($chip in $ids.get_objects($top))
+#if($ids.get_type($chip)=="chip")
+#set($chipName=$ids.get_prop($chip,"name"))
+#foreach($block in $ids.get_all_block($chip))
+#if($ids.get_type($block)=="block")
+#set($blockName=$ids.get_prop($block,"name"))
+#set($blockName=$blockName.replace("_csr", ""))
+#set($blockName=$blockName.replace("_CSR", ""))
+#set($sep="_")
+#set($blkInstName=$chipName+$sep+$blockName)
+#set($top_name=$chipName+$sep+$blockName)
+#set($topBaseAddress="BW_"+${chipName.toUpperCase()}+"_"+${blockName.toUpperCase()}+"_ADDRESS")
+/*************START INSTNAME:$chipName$sep$blockName:*************/
+#mDumpHeader($chipName,$blockName,$block)
+#set($filler_count=0)
+#blockStruct($block $blkInstName $topBaseAddress)
+${hash}endif // __${chipName.toUpperCase()}_${blockName.toUpperCase()}_REG_STRUCT_H__
+#end
+#end
+
+#end
+#end
+#end
+
+
+#if($ids.get_type($top)=="chip")
+#foreach($block in $ids.get_all_block($chip))
+#if($ids.get_type($block)=="block")
+#set($blockName=$ids.get_prop($block,"name"))
+#set($blockName=$blockName.replace("_csr", ""))
+#set($blockName=$blockName.replace("_CSR", ""))
+#set($topBaseAddress="BW_"+${blockName.toUpperCase()}+"_ADDRESS")
+/*************START INSTNAME: $blockName*************/
+#mDumpHeader("",$blockName,$block)
+#set($filler_count=0)
+#blockStruct($block $blockName $topBaseAddress)
+${hash}endif // __${blockName.toUpperCase()}_REG_STRUCT_H__
+#end
+#end
+#end
+
+
+
+#macro(blockStruct $block $blkInstName $topBaseAddress)
+##set($BlockName=$ids.get_prop($block,"name"))
+typedef struct _${blkInstName}_Block_t
+{
+#foreach($obj in $ids.get_objects($block))
+#set($obj_type=$ids.get_type($obj))
+#if($obj_type == "emptyspace")
+#set($StartAddr=$ids.get_longVar().parseLong($ids.get_prop($obj,"address").replace("0x", ""),16))
+#set($EndAddr=$ids.get_longVar().parseLong($ids.get_prop($obj,"endaddress").replace("0x", ""),16))
+#mblockStructFiller($obj $block $StartAddr $EndAddr)
+#elseif($obj_type == "reggroup")
+#set($uniqueReggrpName=$ids.get_prop($obj,"name"))
+#set($absoluteOffsetRegGrp= $INT.parseInt($ids.get_prop($obj,"offset")))
+#mblockStructReggroup ($obj $blkInstName $block $uniqueReggrpName $absoluteOffsetRegGrp)
+#elseif($obj_type == "mem")
+#set($absoluteMemOffset= $INT.parseInt($ids.get_prop($obj,"offset")))
+#mblockStructMem ($obj $blkInstName $block $absoluteMemOffset)
+#else
+#if($obj_type == "reg")
+#set($regCount=$ids.get_prop($obj,"count"))
+#if($regCount != " " && $regCount != "1")
+#set($varcountreg = $INT.parseInt($regCount) - 1)
+#foreach($number in [0..${varcountreg}])
+#set($absoluteOffset= (($number) * ($INT.parseInt($ids.get_prop($obj,"size")))) + ($INT.parseInt($ids.get_prop($obj,"offset"))))
+#set($uniqueRegName=$ids.get_prop($obj,"name")+"_"+$number)
+#mblockStructReg ($obj $blkInstName $block $uniqueRegName $absoluteOffset)
+#end
+#else
+#set($absoluteOffset= $INT.parseInt($ids.get_prop($obj,"offset")))
+#set($uniqueRegName=$ids.get_prop($obj,"name"))
+#mblockStructReg ($obj $blkInstName $block $uniqueRegName $absoluteOffset)
+#end
+#end
+#end
+#end
+} ${blkInstName}_Block_t;
+
+####typedef ${blkInstName}_Block_t* p${blkInstName}_Block = const (${topBaseAddress}); ## MICRON REQ (5556: 3July)
+####const ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t*) (${topBaseAddress}); ## MICRON REQ (5556: 12Aug)
+volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t*) (${topBaseAddress});
+#end
+
+#macro(mblockStructFiller $emptyObj $block $StartAddr $EndAddr)
+#set($blockBaseAddr = $ids.get_longVar().parseLong($ids.get_prop($block,"address").replace("0x", ""),16))
+#set($localStartAddr= $StartAddr - $blockBaseAddr)
+#set($localEndAddr= $EndAddr - $blockBaseAddr)
+#get_filler_type($emptyObj)    FILLER_${filler_count}[0x#get_filler_size($emptyObj)];    // FILLER - Offsets 0x$ids.get_longVar().toHexString($localStartAddr) to 0x$ids.get_longVar().toHexString($localEndAddr)
+#set($filler_count = $filler_count + 1)
+#end
+
+#macro(mblockStructReggroup $reggroupObj $blkInstName $block $uniqueReggrpName $absoluteOffsetRegGrp)
+#set($reggrpCount=$ids.get_prop($reggroupObj,"count"))
+#if($reggrpCount != " " && $reggrpCount != "1")
+#set($varcountreggrp = $INT.parseInt($reggrpCount) - 1)
+#foreach($RegGrpnumber in [0..${varcountreggrp}])
+#set($absoluteOffsetRegGrpR= (($RegGrpnumber) * ($INT.parseInt($ids.get_prop($reggroupObj,"size")))) + ($absoluteOffsetRegGrp))
+#foreach($section_obj in $ids.get_objects($reggroupObj))
+#set($section_obj_type=$ids.get_type($section_obj))
+#if($section_obj_type == "emptyspace")
+#set($emptySize= ($ids.get_longVar().parseLong($ids.get_prop($section_obj,"endaddress").replace("0x", ""),16))-($ids.get_longVar().parseLong($ids.get_prop($section_obj,"address").replace("0x", ""),16)))
+#set($StartAddr= $absoluteOffsetRegGrpR)
+#set($EndAddr=$StartAddr + $emptySize)
+#mblockStructFiller($section_obj $block $StartAddr $EndAddr)
+#elseif($section_obj_type == "reggroup")
+#set($unqReggrpName=$uniqueReggrpName+"_"+$RegGrpnumber+"_"+$ids.get_prop($section_obj,"name"))
+#set($absoluteOffsetRegGrpI = $absoluteOffsetRegGrpR + ($INT.parseInt($ids.get_prop($section_obj,"offset"))))
+#mblockStructReggroup ($section_obj $blkInstName $block $unqReggrpName $absoluteOffsetRegGrpI)
+#elseif($section_obj_type == "mem")
+#set($$absoluteMemOffset = $absoluteOffsetRegGrpR + ($INT.parseInt($ids.get_prop($section_obj,"offset"))))
+#mblockStructMem ($section_obj $blkInstName $block $absoluteMemOffset)
+#else
+#if($section_obj_type == "reg")
+#set($reggrpRegCount=$ids.get_prop($section_obj,"count"))
+#if($reggrpRegCount != " " && $reggrpRegCount != "1")
+#set($varcountreggrpReg = $INT.parseInt($reggrpRegCount) - 1)
+#foreach($number in [0..${varcountreggrpReg}])
+#set($absoluteOffset= (($number) * ($INT.parseInt($ids.get_prop(section_obj,"size")))) + ($INT.parseInt($ids.get_prop($section_obj,"offset"))) + $absoluteOffsetRegGrpR)
+#set($unqRegName=$uniqueReggrpName+"_"+$RegGrpnumber+$ids.get_prop($section_obj,"name")+"_"+$number)
+#mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
+#end
+#else
+#set($absoluteOffset= $INT.parseInt($ids.get_prop($section_obj,"offset")) + $absoluteOffsetRegGrpR)
+#set($unqRegName=$uniqueReggrpName+"_"+$RegGrpnumber+$ids.get_prop($section_obj,"name"))
+#mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
+#end
+#end
+#end
+#end
+#end
+#else
+#foreach($section_obj in $ids.get_objects($reggroupObj))
+#set($section_obj_type=$ids.get_type($section_obj))
+#if($section_obj_type == "emptyspace")
+#set($StartAddr=$ids.get_longVar().parseLong($ids.get_prop($section_obj,"address").replace("0x", ""),16))
+#set($EndAddr=$ids.get_longVar().parseLong($ids.get_prop($section_obj,"endaddress").replace("0x", ""),16))
+#mblockStructFiller($section_obj $block $StartAddr $EndAddr)
+#elseif($section_obj_type == "reggroup")
+#set($unqReggrpName=$uniqueReggrpName+"_"+$ids.get_prop($section_obj,"name"))
+#set($absoluteOffsetRegGrpI = $absoluteOffsetRegGrp + ($INT.parseInt($ids.get_prop($section_obj,"offset"))))
+#mblockStructReggroup ($section_obj $blkInstName $block $unqReggrpName $absoluteOffsetRegGrpI)
+#elseif($section_obj_type == "mem")
+#set($absoluteMemOffset = $absoluteOffsetRegGrp + ($INT.parseInt($ids.get_prop($section_obj,"offset"))))
+#mblockStructMem ($section_obj $blkInstName $block $absoluteMemOffset)
+#else
+#if($section_obj_type == "reg")
+#set($reggrpRegCount=$ids.get_prop($section_obj,"count"))
+#if($reggrpRegCount != " " && $reggrpRegCount != "1")
+#set($varcountreggrpReg = $INT.parseInt($reggrpRegCount) - 1)
+#foreach($number in [0..${varcountreggrpReg}])
+#set($absoluteOffset= (($number) * ($INT.parseInt($ids.get_prop($section_obj,"size")))) + ($INT.parseInt($ids.get_prop($section_obj,"offset"))) + $absoluteOffsetRegGrp)
+#set($unqRegName=$uniqueReggrpName+$ids.get_prop($section_obj,"name")+"_"+$number)
+#mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
+#end
+#else
+#set($absoluteOffset= $INT.parseInt($ids.get_prop($section_obj,"offset")) + $absoluteOffsetRegGrp)
+#set($unqRegName=$uniqueReggrpName+$ids.get_prop($section_obj,"name"))
+#mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
+#end
+#end
+#end
+#end
+#end
+#end
+
+#macro (mblockStructMem $memObj $blkInstName $block $absoluteMemOffset)
+#if($ids.get_prop($memObj,"count") == " ")
+#set($memCount=1)
+#else
+#set($memCount=$INT.parseInt($ids.get_prop($memObj,"count")))
+#end
+#set($BlockName=$ids.get_prop($block,"name"))
+#set($mem_name=$ids.get_prop($memObj,"name"))
+#set($parentNodeMem=$ids.get_parent($memObj))
+#if($ids.get_type($parentNodeMem)!="block")
+#set($parentNameMem=$ids.get_prop($parentNodeMem,"name"))
+#set($ancestorNodeMem=$ids.get_parent($parentNodeMem))
+#if($ids.get_type($ancestorNodeMem)!="block")
+#set($ancestorNameMem=$ids.get_prop($ancestorNodeMem,"name"))
+#set($ancestorNodeMem1=$ids.get_parent($ancestorNodeMem))
+#if($ids.get_type($ancestorNodeMem1)!="block")
+#set($ancestorNameMem1=$ids.get_prop($ancestorNodeMem1,"name"))
+#set($ancestorNodeMem2=$ids.get_parent($ancestorNodeMem1))
+#if($ids.get_type($ancestorNodeMem2)!="block")
+#set($ancestorNameMem2=$ids.get_prop($ancestorNodeMem2,"name"))
+#set ($hiernameMem=$ancestorNameMem2+"_"+$ancestorNameMem1+"_"+$ancestorNameMem+"_"+$parentNameMem+"_"+$mem_name)
+#set ($hiernameMemInst=$ancestorNameMem2+$ancestorNameMem1+$ancestorNameMem+$parentNameMem+$mem_name)
+#else
+#set ($hiernameMem=$ancestorNameMem1+"_"+$ancestorNameMem+"_"+$parentNameMem+"_"+$mem_name)
+#set ($hiernameMemInst=$ancestorNameMem1+$ancestorNameMem+$parentNameMem+$mem_name)
+#end
+#else
+#set ($hiernameMem=$ancestorNameMem+"_"+$parentNameMem+"_"+$mem_name)
+#set ($hiernameMemInst=$ancestorNameMem+$parentNameMem+$mem_name)
+#end
+#else
+#set ($hiernameMem=$parentNameMem+"_"+$mem_name)
+#set ($hiernameMemInst=$parentNameMem+$mem_name)
+#end
+#else
+#set($hiernameMem=$mem_name)
+#set($hiernameMemInst=$mem_name)
+#end
+#set($hiernameMem=$hiernameMem.replace("_csr", ""))
+#set($hiernameMem=$hiernameMem.replace("_CSR", ""))
+##BW_${blkInstName.toUpperCase()}__${hiernameMem.toUpperCase()}_ACC_T    ${BlockName}${hiernameMemInst}Acc[0x$INT.toHexString($memCount)];    // Offsets $ids.get_prop($memObj,"address") to $ids.get_prop($memObj,"endaddress")
+BW_${blkInstName.toUpperCase()}__${hiernameMem.toUpperCase()}_ACC_T    ${BlockName}${hiernameMemInst}Acc[0x$INT.toHexString($memCount)];    // Offset 0x$INT.toHexString($absoluteMemOffset)
+#end
+
+#macro(mblockStructReg $regObj $blkInstName $block $uniqueNameReg $absoluteOffset)
+#set($BlockName=$ids.get_prop($block,"name"))
+#set($regName=$ids.get_prop($regObj,"name"))
+#set($parentNode=$ids.get_parent($regObj))
+#if($ids.get_type($parentNode)!="block")
+#set($parentName=$ids.get_prop($parentNode,"name"))
+#set($ancestorNode=$ids.get_parent($parentNode))
+#if($ids.get_type($ancestorNode)!="block")
+#set($ancestorName=$ids.get_prop($ancestorNode,"name"))
+#set($ancestorNode1=$ids.get_parent($ancestorNode))
+#if($ids.get_type($ancestorNode1)!="block")
+#set($ancestorName1=$ids.get_prop($ancestorNode1,"name"))
+#set($ancestorNode2=$ids.get_parent($ancestorNode1))
+#if($ids.get_type($ancestorNode2)!="block")
+#set($ancestorName2=$ids.get_prop($ancestorNode2,"name"))
+#set ($hiername=$ancestorName2+"_"+$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
+##set ($hiernameInst=$ancestorName2+$ancestorName1+$ancestorName+$parentName+$regName)
+#else
+#set ($hiername=$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
+##set ($hiernameInst=$ancestorName1+$ancestorName+$parentName+$regName)
+#end
+#else
+#set ($hiername=$ancestorName+"_"+$parentName+"_"+$regName)
+##set ($hiernameInst=$ancestorName+$parentName+$regName)
+#end
+#else
+#set ($hiername=$parentName+"_"+$regName)
+##set ($hiernameInst=$parentName+$regName)
+#end
+#else
+#set($hiername=$regName)
+##set($hiernameInst=$regName)
+#end
+#set($hiername=$hiername.replace("_csr", ""))
+#set($hiername=$hiername.replace("_CSR", ""))
+##BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T    ${BlockName}${hiernameInst}Acc;    // Offset $ids.get_prop($regObj,"address")
+BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T    ${BlockName}${uniqueNameReg}Acc;    // Offset 0x$INT.toHexString($absoluteOffset)
+#end
+
+#macro(get_filler_size $emptySpaceElem)
+#set($startaddr = $ids.get_longVar().parseLong($ids.get_prop($emptySpaceElem,"address").replace("0x", ""), 16))
+#set($endaddr = $ids.get_longVar().parseLong($ids.get_prop($emptySpaceElem,"endaddress").replace("0x", ""), 16))
+#set($addressUnit = $ids.get_longVar().parseLong($ids.get_addressUnit($emptySpaceElem)))
+#set($Size = (($endaddr - $startaddr) + 1) * $addressUnit)
+#if (($Size%32) == 0)
+#set($FinalSize = ($Size/32))
+#elseif (($Size%16) == 0) {
+#set($FinalSize = ($Size/16))
+#else
+#set($FinalSize = ($Size/$addressUnit))
+#end
+#set($FinalSizeHex= $ids.get_longVar().toHexString($FinalSize))
+${FinalSizeHex}#end
+
+#macro(get_filler_type $emptySpaceElem)
+#set($startaddr = $ids.get_longVar().parseLong($ids.get_prop($emptySpaceElem,"address").replace("0x", ""), 16))
+#set($endaddr = $ids.get_longVar().parseLong($ids.get_prop($emptySpaceElem,"endaddress").replace("0x", ""), 16))
+#set($addressUnit = $ids.get_longVar().parseLong($ids.get_addressUnit($emptySpaceElem)))
+#set($Size = (($endaddr - $startaddr) + 1) * $addressUnit)
+#if (($Size%32) == 0)
+#set($FillerType = "uint32_t")
+#elseif (($Size%16) == 0) {
+#set($FillerType = "uint16_t")
+#else
+#set($FillerType = "uint"+$addressUnit+"_t")
+#end
+${FillerType}#end
+
+#macro(mDumpHeader $chipname $blockname $block)
+/******************************************************************************
+
+    Copyright 2018 Micron Technology, Inc. All Rights Reserved.
+    This software contains confidential information and trade secrets of
+    Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
+    without the prior express written permission of Micron Technology, Inc.
+
+    CHeader Ver 4.20
+    Starting_IDS_version : 6.20.0.0
+
+    Purpose:
+    <Put purpose here>
+
+    Description:
+    <Put description here>
+
+#if($ids.get_prop($block,"orig_path") != " ")
+#set($path=$ids.get_prop($block,"orig_path"))
+#set($BlockName=$ids.get_prop($block,"name"))
+    file path for ${BlockName} : ${path}
+#else
+#foreach($sec in $ids.get_objects($block))
+#if(($ids.get_type($sec)=="reggroup") && ($ids.get_prop($sec,"type") == "subblock") && ($ids.get_prop($sec,"orig_path") != " "))
+#set($subpath=$ids.get_prop($sec,"orig_path"))
+#set($InstName=$ids.get_prop($sec,"name"))
+    file path for ${InstName} : ${subpath}
+#end
+#end
+#end
+
+******************************************************************************/
+${hash}ifndef __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_STRUCT_H__
+${hash}define __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_STRUCT_H__
+
+#end
