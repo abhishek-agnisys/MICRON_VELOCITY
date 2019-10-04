@@ -498,11 +498,11 @@ typedef enum {
 #$def ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR(index) \
          (BW_GET_REG_IND_ADDR_VAL_${top_name.toUpperCase()}(${offset}u,index,$el_size))
 #if($sw_access != "wo")
-#$def read_${blkInstName}__${hiername}(index) \
+#$def RD_${blkInstName}__${hiername}(index) \
          ((BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg)
 #end
 #if($sw_access != "ro")
-#$def write_${blkInstName}__${hiername}(index,val) \
+#$def WR_${blkInstName}__${hiername}(index,val) \
          (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg = (uint${reg_width}_t)(val)
 #end
 #foreach($field in $ids.get_fields($reg))
@@ -511,11 +511,11 @@ typedef enum {
 #set($fname=$ids.get_prop($field,"name"))
 #set($sw_access=$ids.get_prop($field,"sw_access"))
 #if($sw_access != "wo")
-#$def read_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index) \
+#$def RD_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index) \
          ((BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname)
 #end
 #if($sw_access != "ro")
-#$def write_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index,val) \
+#$def WR_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index,val) \
          (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname = (uint${reg_width}_t)(val)
 #end
 #end
@@ -606,7 +606,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.20
+    CHeader Ver 4.22
     Starting_IDS_version : 6.20.0.0
 
     Purpose:
