@@ -21,6 +21,7 @@
 6. The reggroup-inside-reggroup cases exist in XML exclusively (i.e. the object
    "obj3" in this template) due to the format issue.
 
+    Starting_IDS_version : 6.20.0.0
 ================================================================================
 *#
 #set($hash="#")
@@ -607,7 +608,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     without the prior express written permission of Micron Technology, Inc.
 
     CHeader Ver 4.22
-    Starting_IDS_version : 6.20.0.0
+    IDS_version : $ids.get_ids_version()
 
     Purpose:
     <Put purpose here>
