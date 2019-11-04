@@ -30,6 +30,9 @@ $ids.init_cheader()
 #set($put="include")
 #set($def="define")
 #set($INT=0)
+#set($EmptyChar=" ")
+#set($structElem = [])
+#set($largestStructElemLen = 0)
 ##set($filler_count=0)
 #if($ids.get_type($top)=="board")
 #foreach($chip in $ids.get_objects($top))
@@ -48,7 +51,6 @@ $ids.init_cheader()
 #mDumpHeader($chipName,$blockName,$block)
 #set($filler_count=0)
 #blockStruct($block $blkInstName $topBaseAddress)
-${hash}endif // __${chipName.toUpperCase()}_${blockName.toUpperCase()}_REG_STRUCT_H__
 #end
 #end
 
@@ -68,7 +70,6 @@ ${hash}endif // __${chipName.toUpperCase()}_${blockName.toUpperCase()}_REG_STRUC
 #mDumpHeader("",$blockName,$block)
 #set($filler_count=0)
 #blockStruct($block $blockName $topBaseAddress)
-${hash}endif // __${blockName.toUpperCase()}_REG_STRUCT_H__
 #end
 #end
 #end
@@ -110,6 +111,14 @@ typedef struct _${blkInstName}_Block_t
 #end
 #end
 #end
+#foreach($currStructElem in $structElem)
+#set($StringSplitArray = $currStructElem.split("@@"))
+#set($currlength1=$StringSplitArray.get(0).length())
+#set($currlength2=$StringSplitArray.get(1).length())
+#set($EmptySpaceVal1=$largestStructElemLen - $currlength1)
+#set($EmptySpaceVal2=$largestStructElemLen - $currlength2)
+    $StringSplitArray.get(0)#foreach($itr in [0..$EmptySpaceVal1])${EmptyChar}#end   $StringSplitArray.get(1)#foreach($itr in [0..$EmptySpaceVal2])${EmptyChar}#end   $StringSplitArray.get(2)
+#end
 } ${blkInstName}_Block_t;
 
 ####typedef ${blkInstName}_Block_t* p${blkInstName}_Block = const (${topBaseAddress}); ## MICRON REQ (5556: 3July)
@@ -121,7 +130,13 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #set($blockBaseAddr = $ids.get_longVar().parseLong($ids.get_prop($block,"address").replace("0x", ""),16))
 #set($localStartAddr= $StartAddr - $blockBaseAddr)
 #set($localEndAddr= $EndAddr - $blockBaseAddr)
-#get_filler_type($emptyObj)    FILLER_${filler_count}[0x#get_filler_size($emptyObj)];    // FILLER - Offsets 0x$ids.get_longVar().toHexString($localStartAddr) to 0x$ids.get_longVar().toHexString($localEndAddr)
+#set($structFillerName="#get_filler_type($emptyObj)")
+#set($currlength=$structFillerName.length())
+#if($largestStructElemLen < $currlength)
+#set($largestStructElemLen = $currlength)
+#end
+#set($myname=$structFillerName+"@@"+"FILLER_"+${filler_count}+"[0x"+"#get_filler_size($emptyObj)"+"];"+"@@"+"// FILLER - Offsets 0x"+$ids.get_longVar().toHexString($localStartAddr)+" to 0x"+$ids.get_longVar().toHexString($localEndAddr))
+#set($dummy=$structElem.add($myname))
 #set($filler_count = $filler_count + 1)
 #end
 
@@ -239,8 +254,13 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #end
 #set($hiernameMem=$hiernameMem.replace("_csr", ""))
 #set($hiernameMem=$hiernameMem.replace("_CSR", ""))
-##BW_${blkInstName.toUpperCase()}__${hiernameMem.toUpperCase()}_ACC_T    ${BlockName}${hiernameMemInst}Acc[0x$INT.toHexString($memCount)];    // Offsets $ids.get_prop($memObj,"address") to $ids.get_prop($memObj,"endaddress")
-BW_${blkInstName.toUpperCase()}__${hiernameMem.toUpperCase()}_ACC_T    ${BlockName}${hiernameMemInst}Acc[0x$INT.toHexString($memCount)];    // Offset 0x$INT.toHexString($absoluteMemOffset)
+#set($structElemNameMem="BW_"+${blkInstName.toUpperCase()}+"__"+${hiernameMem.toUpperCase()}+"_ACC_T")
+#set($currlength=$structElemNameMem.length())
+#if($largestStructElemLen < $currlength)
+#set($largestStructElemLen = $currlength)
+#end
+#set($myname=$structElemNameMem+"@@"+${BlockName}+${hiernameMemInst}+"Acc[0x"+$INT.toHexString($memCount)+"];"+"@@"+"// Offset 0x"+$INT.toHexString($absoluteMemOffset))
+#set($dummy=$structElem.add($myname))
 #end
 
 #macro(mblockStructReg $regObj $blkInstName $block $uniqueNameReg $absoluteOffset)
@@ -278,8 +298,13 @@ BW_${blkInstName.toUpperCase()}__${hiernameMem.toUpperCase()}_ACC_T    ${BlockNa
 #end
 #set($hiername=$hiername.replace("_csr", ""))
 #set($hiername=$hiername.replace("_CSR", ""))
-##BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T    ${BlockName}${hiernameInst}Acc;    // Offset $ids.get_prop($regObj,"address")
-BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T    ${BlockName}${uniqueNameReg}Acc;    // Offset 0x$INT.toHexString($absoluteOffset)
+#set($structElemNameReg="BW_"+${blkInstName.toUpperCase()}+"__"+${hiername.toUpperCase()}+"_ACC_T")
+#set($currlength=$structElemNameReg.length())
+#if($largestStructElemLen < $currlength)
+#set($largestStructElemLen = $currlength)
+#end
+#set($myname=$structElemNameReg+"@@"+${BlockName}+${uniqueNameReg}+"Acc;"+"@@"+"// Offset 0x"+$INT.toHexString($absoluteOffset))
+#set($dummy=$structElem.add($myname))
 #end
 
 #macro(get_filler_size $emptySpaceElem)
@@ -319,7 +344,7 @@ ${FillerType}#end
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.20
+    CHeader Ver 4.22
     IDS_version : $ids.get_ids_version()
 
     Purpose:
@@ -343,7 +368,6 @@ ${FillerType}#end
 #end
 
 ******************************************************************************/
-${hash}ifndef __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_STRUCT_H__
-${hash}define __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_STRUCT_H__
+${hash}pragma once
 
 #end
