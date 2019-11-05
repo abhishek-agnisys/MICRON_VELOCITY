@@ -53,7 +53,7 @@ $ids.init_cheader()
 
 #mDumpRegistersFromTop($block $blkInstName)
 
-#$put <${hierName.toUpperCase()}_reg_struct.h>
+#$put <${hierName}_reg_struct.h>
 ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 #end
 #end
@@ -78,7 +78,7 @@ ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 
 #mDumpRegistersFromTop($block $blockName)
 
-#$put <${hierName.toUpperCase()}_reg_struct.h>
+#$put <${hierName}_reg_struct.h>
 ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 #end
 #end
