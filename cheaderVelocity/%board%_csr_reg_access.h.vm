@@ -52,8 +52,6 @@ $ids.init_cheader()
                        (BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size))
 
 #mDumpRegistersFromTop($block $blkInstName)
-
-#$put <${hierName}_reg_struct.h>
 ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 #end
 #end
@@ -77,8 +75,6 @@ ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
                   ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size)))
 
 #mDumpRegistersFromTop($block $blockName)
-
-#$put <${hierName}_reg_struct.h>
 ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
 #end
 #end
