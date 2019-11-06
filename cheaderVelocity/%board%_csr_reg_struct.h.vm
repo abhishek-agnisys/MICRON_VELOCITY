@@ -31,7 +31,6 @@ $ids.init_cheader()
 #set($def="define")
 #set($INT=0)
 #set($EmptyChar=" ")
-#set($structElem = [])
 #set($largestStructElemLen = 0)
 ##set($filler_count=0)
 #if($ids.get_type($top)=="board")
@@ -78,6 +77,7 @@ $ids.init_cheader()
 
 #macro(blockStruct $block $blkInstName $topBaseAddress)
 ##set($BlockName=$ids.get_prop($block,"name"))
+#set($structElem = [])
 typedef struct _${blkInstName}_Block_t
 {
 #foreach($obj in $ids.get_objects($block))
