@@ -38,7 +38,6 @@ $ids.init_cheader()
 #set($blockName=$blockName.replace("_CSR", ""))
 #set($sep="_")
 #set($blkInstName=$chipName+$sep+$blockName)
-/*************START INSTNAME:$chipName$sep$blockName:*************/
 #$put<${blkInstName}_reg_access.h>
 #end
 #end
@@ -55,7 +54,6 @@ $ids.init_cheader()
 #set($blockName=$blockName.replace("_csr", ""))
 #set($blockName=$blockName.replace("_CSR", ""))
 #set($topBaseAddress="BW_"+${blockName.toUpperCase()}+"_ADDRESS")
-/*************START INSTNAME: $blockName*************/
 #$put<${blockName}_reg_access.h>
 #end
 #end
