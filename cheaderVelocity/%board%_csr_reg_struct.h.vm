@@ -59,7 +59,7 @@ $ids.init_cheader()
 
 
 #if($ids.get_type($top)=="chip")
-#foreach($block in $ids.get_all_block($chip))
+#foreach($block in $ids.get_all_block($top))
 #if($ids.get_type($block)=="block")
 #set($blockName=$ids.get_prop($block,"name"))
 #set($blockName=$blockName.replace("_csr", ""))
