@@ -10,7 +10,7 @@ $ids.get_header($top)
 
 ##for Chip
 #if($ids.get_type($top)=="chip")
-parameter ${topname.toUpperCase()}_ADDR 'h${ids.get_prop($top,"address").replace("0x","")}
+parameter ${topname.toUpperCase()}_ADDR = 'h${ids.get_prop($top,"address").replace("0x","")};
 #foreach($chipchild in $ids.get_objects($top))
 #if($ids.get_type($chipchild)=="block")
 #foreach($blockchild in $ids.get_objects($chipchild))
@@ -30,7 +30,7 @@ parameter ${topname.toUpperCase()}_ADDR 'h${ids.get_prop($top,"address").replace
 
 ##for Block
 #if($ids.get_type($top)=="block")
-parameter ${topname.toUpperCase()}_ADDR 'h${ids.get_prop($top,"address").replace("0x","")}
+parameter ${topname.toUpperCase()}_ADDR = 'h${ids.get_prop($top,"address").replace("0x","")};
 #foreach($blockchild in $ids.get_objects($top))
 #if($ids.get_prop($blockchild,"is_rsv") != "true")
 #if($ids.get_type($blockchild)=="reg")
@@ -47,19 +47,19 @@ parameter ${topname.toUpperCase()}_ADDR 'h${ids.get_prop($top,"address").replace
 ## Start Define For Register
 #macro(regDefine $regObj)
 #set($childname=$ids.get_prop($regObj,"name"))
-parameter ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR 'h${ids.get_prop($regObj,"address").replace("0x","")}
+parameter ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR = 'h${ids.get_prop($regObj,"address").replace("0x","")};
 #end
 ## End Define For Register
 
 ## Start Define For Memory
 #macro(memDefine $memObj)
-parameter ${ids.getUniqueName($memObj,"block").toUpperCase()}_ADDR 'h${ids.get_prop($memObj,"address").replace("0x","")}
+parameter ${ids.getUniqueName($memObj,"block").toUpperCase()}_ADDR = 'h${ids.get_prop($memObj,"address").replace("0x","")};
 #end
 ## End Define For Memory
 
 ## Start Define For Section
 #macro(SecDefine $secObj)
-parameter ${ids.getUniqueName($secObj,"block").toUpperCase()}_ADDR 'h${ids.get_prop($secObj,"address").replace("0x","")}
+parameter ${ids.getUniqueName($secObj,"block").toUpperCase()}_ADDR = 'h${ids.get_prop($secObj,"address").replace("0x","")};
 #foreach($SecChild in $ids.get_objects($secObj))
 #if($ids.get_type($SecChild)=="reg")
 #regDefine($SecChild)
