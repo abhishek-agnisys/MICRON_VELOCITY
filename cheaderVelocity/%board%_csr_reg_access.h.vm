@@ -255,10 +255,23 @@ ${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_ADDR (BW
 ${hash}${def} ${blkInstName.toUpperCase()}_${hiernameMem.toUpperCase()}_WORDS $words
 
 typedef union bw_${blkInstName.toLowerCase()}__${hiernameMem.toLowerCase()}_acc_t {
+#if($reg_width > 64)
+#if (($reg_width%32) == 0)
+#set($indexVal = ($reg_width/32))
+#else
+#set($indexVal = ($reg_width/32) + 1)
+#end
+#set($memStructName=$ids.get_prop($sec,"name")+'['+$indexVal+']')
+    struct {
+        uint32_t  ${memStructName};
+    };
+    uint32_t reg;
+#else
     struct {
         uint${reg_width}_t  $ids.get_prop($sec,"name")  : $reg_width;
     };
     uint${reg_width}_t reg;
+#end
 } BW_${blkInstName.toUpperCase()}__${hiernameMem.toUpperCase()}_ACC_T;
 #end
 
@@ -607,7 +620,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.24
+    CHeader Ver 4.26
     IDS_version : $ids.get_ids_version()
 
     Purpose:
