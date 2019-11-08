@@ -1,18 +1,19 @@
-
-#set($top=$ids.get_top())
-$ids.get_header($top)
-
 ##########################################################
 ##            Main Body for SV header                     #
-##            Ver 1.2                                     #
+##            Ver 1.4                                     #
 ##########################################################
+#set($top=$ids.get_top())
 #set($topname=$ids.get_prop($top,"name"))
 
 ##for Chip
 #if($ids.get_type($top)=="chip")
-parameter ${topname.toUpperCase()}_ADDR = 'h${ids.get_prop($top,"address").replace("0x","")};
+##parameter ${topname.toUpperCase()}_ADDR = 'h${ids.get_prop($top,"address").replace("0x","")};
 #foreach($chipchild in $ids.get_objects($top))
 #if($ids.get_type($chipchild)=="block")
+#set($blkInstName=$ids.get_prop($chipchild,"name"))
+
+/*************START INSTNAME:$blkInstName:*************/
+$ids.get_header($top)
 #foreach($blockchild in $ids.get_objects($chipchild))
 #if($ids.get_prop($blockchild,"is_rsv") != "true")
 #if($ids.get_type($blockchild)=="reg")
