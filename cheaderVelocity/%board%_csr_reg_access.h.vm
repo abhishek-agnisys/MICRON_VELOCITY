@@ -52,7 +52,7 @@ $ids.init_cheader()
                        (BW_${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size))
 
 #mDumpRegistersFromTop($block $blkInstName)
-${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
+
 #end
 #end
 
@@ -75,7 +75,7 @@ ${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
                   ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset) + (index) * (el_size)))
 
 #mDumpRegistersFromTop($block $blockName)
-${hash}endif // __${hierName.toUpperCase()}_REG_ACCESS_H__
+
 #end
 #end
 #end
@@ -644,9 +644,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 #end
 
 ******************************************************************************/
-${hash}ifndef __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_ACCESS_H__
-${hash}define __${chipname.toUpperCase()}_${blockname.toUpperCase()}_REG_ACCESS_H__
-
+${hash}pragma_once
 
 #$put "global_types.h"
 #$put "global_instances.h"
