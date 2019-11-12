@@ -644,7 +644,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 #end
 
 ******************************************************************************/
-${hash}pragma_once
+${hash}pragma once
 
 #$put "global_types.h"
 #$put "global_instances.h"
