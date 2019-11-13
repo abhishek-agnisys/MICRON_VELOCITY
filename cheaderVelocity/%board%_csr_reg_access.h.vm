@@ -615,19 +615,19 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 #macro(mDumpHeader $chipname $blockname $block)
 /******************************************************************************
 
-    Copyright 2018 Micron Technology, Inc. All Rights Reserved.
+    Copyright 2019 Micron Technology, Inc. All Rights Reserved.
     This software contains confidential information and trade secrets of
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.28
+    CHeader Ver 4.30
     IDS_version : $ids.get_ids_version()
 
-    Purpose:
-    <Put purpose here>
+    Purpose     : To access the register access data structures.
 
-    Description:
-    <Put description here>
+    Description : The file shall be used to access the pre-defined register
+                  defines(which are write access & read access) and individual
+                  fields of register structure .
 
 #if($ids.get_prop($block,"orig_path") != " ")
 #set($path=$ids.get_prop($block,"orig_path"))

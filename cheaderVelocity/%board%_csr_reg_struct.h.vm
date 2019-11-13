@@ -339,7 +339,7 @@ ${FillerType}#end
 #macro(mDumpHeader $chipname $blockname $block)
 /******************************************************************************
 
-    Copyright 2018 Micron Technology, Inc. All Rights Reserved.
+    Copyright 2019 Micron Technology, Inc. All Rights Reserved.
     This software contains confidential information and trade secrets of
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.

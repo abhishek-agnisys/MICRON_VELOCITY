@@ -38,7 +38,7 @@ $ids.init_cheader()
 #set($blockName=$blockName.replace("_CSR", ""))
 #set($sep="_")
 #set($blkInstName=$chipName+$sep+$blockName)
-#$put<${blkInstName}_reg_struct.h>
+#$put <${blkInstName}_reg_struct.h>
 #end
 #end
 #end
@@ -54,7 +54,7 @@ $ids.init_cheader()
 #set($blockName=$blockName.replace("_csr", ""))
 #set($blockName=$blockName.replace("_CSR", ""))
 #set($topBaseAddress="BW_"+${blockName.toUpperCase()}+"_ADDRESS")
-#$put<${blockName}_reg_struct.h>
+#$put <${blockName}_reg_struct.h>
 #end
 #end
 #end
@@ -62,20 +62,22 @@ $ids.init_cheader()
 #macro(mDumpHeader)
 /******************************************************************************
 
-    Copyright 2018 Micron Technology, Inc. All Rights Reserved.
+    Copyright 2019 Micron Technology, Inc. All Rights Reserved.
     This software contains confidential information and trade secrets of
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 1.0
+    CHeader Ver 2.0
     IDS_version : $ids.get_ids_version()
 
-    Purpose:
-    <Put purpose here>
+    Purpose     : It is a wrapper file which include the all supported
+                  reg_struct.h files.
 
-    Description:
-    <Put description here>
+    Description : FW will include the this single file to include all
+                  the structures in FW code.
 
 ******************************************************************************/
+
+${hash}pragma once
 
 #end
