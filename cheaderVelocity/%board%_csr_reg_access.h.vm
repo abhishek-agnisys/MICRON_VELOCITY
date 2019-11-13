@@ -62,13 +62,18 @@ $ids.init_cheader()
 
 
 #if($ids.get_type($top)=="chip")
+#set($chipName=$ids.get_prop($top,"name"))
+#mDumpHeader("",$chipName,$top)
 #foreach($block in $ids.get_all_block($top))
 #if($ids.get_type($block)=="block")
 #set($blockName=$ids.get_prop($block,"name"))
 #set($blockName=$blockName.replace("_csr", ""))
 #set($blockName=$blockName.replace("_CSR", ""))
-/*************START INSTNAME: $blockName*************/
-#mDumpHeader("",$blockName,$block)
+/****************************************************************************
+ *
+ *   Register Access data structures for ${blockName.toUpperCase()} block
+ *
+ ***************************************************************************/
 #$def BW_GET_REG_ADDR_${blockName.toUpperCase()}(t,offset)            \
                   ((t*)(BW_${blockName.toUpperCase()}_ADDRESS + (offset)))
 #$def BW_GET_REG_IND_ADDR_${blockName.toUpperCase()}(t,offset,index,el_size) \
@@ -620,7 +625,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.30
+    CHeader Ver 4.32
     IDS_version : $ids.get_ids_version()
 
     Purpose     : To access the register access data structures.
@@ -629,6 +634,15 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
                   defines(which are write access & read access) and individual
                   fields of register structure .
 
+#if ($ids.get_type($block)=="chip")
+#foreach($reqBlock in $ids.get_objects($block))
+#if(($ids.get_type($reqBlock)=="block") && ($ids.get_prop($reqBlock,"orig_path") != " "))
+#set($subpath=$ids.get_prop($reqBlock,"orig_path"))
+#set($InstName=$ids.get_prop($reqBlock,"name"))
+    file path for ${InstName} : ${subpath}
+#end
+#end
+#else
 #if($ids.get_prop($block,"orig_path") != " ")
 #set($path=$ids.get_prop($block,"orig_path"))
 #set($BlockName=$ids.get_prop($block,"name"))
@@ -642,6 +656,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
 #end
 #end
 #end
+#end
 
 ******************************************************************************/
 ${hash}pragma once
@@ -649,10 +664,4 @@ ${hash}pragma once
 #$put "global_types.h"
 #$put "global_instances.h"
 
-/****************************************************************************
- *
- *  MACRO         Basic macro to get the physical address of the register
- *                bit field.
- *
- ***************************************************************************/
 #end
