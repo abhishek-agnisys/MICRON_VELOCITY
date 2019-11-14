@@ -261,7 +261,7 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiernameMem.toLowerCase()}_acc_
 #else
 #set($indexVal = ($reg_width/32) + 1)
 #end
-#set($memStructName=$ids.get_prop($sec,"name")+'['+$indexVal+']')
+#set($memStructName=$ids.get_prop($sec,"name").toLowerCase()+'['+$indexVal+']')
     struct {
         uint32_t  ${memStructName};
     };
@@ -336,11 +336,11 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
 #foreach($field in $ids.get_fields($reg))
 #set($LowOffset = $INT.parseInt($ids.get_prop($field,"low_offset")))
 #if(($LowOffset - $currLowOffset) == 0)
-        uint${reg_width}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+        uint${reg_width}_t  $ids.get_prop($field,"name").toLowerCase()  : $math.abs($ids.get_offset_value($field));
 #else
 #set($resv_width = ($LowOffset - $currLowOffset))
         uint${reg_width}_t  resv${currLowOffset} : ${resv_width};
-        uint${reg_width}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+        uint${reg_width}_t  $ids.get_prop($field,"name").toLowerCase()  : $math.abs($ids.get_offset_value($field));
 #end
 #set($currLowOffset = ($LowOffset + $INT.parseInt($ids.get_prop($field,"size"))))
 #end
