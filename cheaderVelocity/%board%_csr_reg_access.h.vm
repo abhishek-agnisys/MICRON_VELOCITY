@@ -600,11 +600,11 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}(val) \
 #set($sw_access=$ids.get_prop($field,"sw_access"))
 #if($sw_access != "wo")
 ${hash}${def} RD_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}() \
-         TIDAL_READ_FIELD( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR, BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T, ${field_name})
+         TIDAL_READ_FIELD( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR, BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T, ${field_name.toLowerCase()})
 #end
 #if($sw_access != "ro")
 ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}(val) \
-         TIDAL_WRITE_FIELD( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR, BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T, ${field_name}, val)
+         TIDAL_WRITE_FIELD( ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR, BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T, ${field_name.toLowerCase()}, val)
 #end
 #end
 #end
