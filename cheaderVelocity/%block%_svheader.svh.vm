@@ -1,26 +1,28 @@
 
 #set($top=$ids.get_top())
 $ids.get_header($top)
+#set($INT=0)
 
 ##########################################################
 ##            Main Body for SV header                     #
-##            Ver 1.4                                     #
+##            Ver 1.5                                     #
 ##########################################################
 #set($topname=$ids.get_prop($top,"name"))
 
 ##for Chip
 #if($ids.get_type($top)=="chip")
-parameter ${topname.toUpperCase()}_ADDR = 'h${ids.get_prop($top,"address").replace("0x","")};
+#set($TopAddrWidth = ($INT.parseInt($ids.get_addr_width($top)) - 1))
+parameter logic [${TopAddrWidth}:0] ${topname.toUpperCase()}_ADDR = ${TopAddrWidth}'h${ids.get_prop($top,"address").replace("0x","")};
 #foreach($chipchild in $ids.get_objects($top))
 #if($ids.get_type($chipchild)=="block")
 #foreach($blockchild in $ids.get_objects($chipchild))
 #if($ids.get_prop($blockchild,"is_rsv") != "true")
 #if($ids.get_type($blockchild)=="reg")
-#regDefine($blockchild)
+#regDefine($blockchild $TopAddrWidth)
 #elseif($ids.get_type($blockchild)=="mem")
-#memDefine($blockchild)
+#memDefine($blockchild $TopAddrWidth)
 #elseif($ids.get_type($blockchild)=="reggroup")
-#SecDefine($blockchild)
+#SecDefine($blockchild $TopAddrWidth)
 #end
 #end
 #end
@@ -30,42 +32,45 @@ parameter ${topname.toUpperCase()}_ADDR = 'h${ids.get_prop($top,"address").repla
 
 ##for Block
 #if($ids.get_type($top)=="block")
-parameter ${topname.toUpperCase()}_ADDR = 'h${ids.get_prop($top,"address").replace("0x","")};
+#set($BlockAddrWidth = ($INT.parseInt($ids.get_addr_width($top)) - 1))
+parameter logic [${BlockAddrWidth}:0] ${topname.toUpperCase()}_ADDR = ${BlockAddrWidth}'h${ids.get_prop($top,"address").replace("0x","")};
 #foreach($blockchild in $ids.get_objects($top))
 #if($ids.get_prop($blockchild,"is_rsv") != "true")
 #if($ids.get_type($blockchild)=="reg")
-#regDefine($blockchild)
+#regDefine($blockchild $BlockAddrWidth)
 #elseif($ids.get_type($blockchild)=="mem")
-#memDefine($blockchild)
+#memDefine($blockchild $BlockAddrWidth)
 #elseif($ids.get_type($blockchild)=="reggroup")
-#SecDefine($blockchild)
+#SecDefine($blockchild $BlockAddrWidth)
 #end
 #end
 #end
 #end
 
 ## Start Define For Register
-#macro(regDefine $regObj)
+#macro(regDefine $regObj $addrWidth)
 #set($childname=$ids.get_prop($regObj,"name"))
-parameter ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR = 'h${ids.get_prop($regObj,"address").replace("0x","")};
+parameter logic [${addrWidth}:0] ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR = ${addrWidth}'h${ids.get_prop($regObj,"address").replace("0x","")};
 #end
 ## End Define For Register
 
 ## Start Define For Memory
-#macro(memDefine $memObj)
-parameter ${ids.getUniqueName($memObj,"block").toUpperCase()}_ADDR = 'h${ids.get_prop($memObj,"address").replace("0x","")};
+#macro(memDefine $memObj $addrWidth)
+parameter logic [${addrWidth}:0] ${ids.getUniqueName($memObj,"block").toUpperCase()}_ADDR = ${addrWidth}'h${ids.get_prop($memObj,"address").replace("0x","")};
 #end
 ## End Define For Memory
 
 ## Start Define For Section
-#macro(SecDefine $secObj)
-parameter ${ids.getUniqueName($secObj,"block").toUpperCase()}_ADDR = 'h${ids.get_prop($secObj,"address").replace("0x","")};
+#macro(SecDefine $secObj $addrWidth)
+parameter logic [${addrWidth}:0] ${ids.getUniqueName($secObj,"block").toUpperCase()}_ADDR = ${addrWidth}'h${ids.get_prop($secObj,"address").replace("0x","")};
 #foreach($SecChild in $ids.get_objects($secObj))
 #if($ids.get_type($SecChild)=="reg")
-#regDefine($SecChild)
+#regDefine($SecChild $addrWidth)
 #end
 #if($ids.get_type($SecChild)=="reggroup")
-#SecDefine($SecChild)
+#SecDefine($SecChild $addrWidth)
+#elseif($ids.get_type($SecChild)=="mem")
+#memDefine($SecChild $addrWidth)
 #end
 #end
 #end
