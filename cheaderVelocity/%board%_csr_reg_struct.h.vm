@@ -314,7 +314,7 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #set($Size = (($endaddr - $startaddr) + 1) * $addressUnit)
 #if (($Size%32) == 0)
 #set($FinalSize = ($Size/32))
-#elseif (($Size%16) == 0) {
+#elseif (($Size%16) == 0)
 #set($FinalSize = ($Size/16))
 #else
 #set($FinalSize = ($Size/$addressUnit))
@@ -329,7 +329,7 @@ ${FinalSizeHex}#end
 #set($Size = (($endaddr - $startaddr) + 1) * $addressUnit)
 #if (($Size%32) == 0)
 #set($FillerType = "uint32_t")
-#elseif (($Size%16) == 0) {
+#elseif (($Size%16) == 0) 
 #set($FillerType = "uint16_t")
 #else
 #set($FillerType = "uint"+$addressUnit+"_t")
