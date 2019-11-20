@@ -13,7 +13,7 @@ $ids.get_header($top)
 #if($ids.get_type($top)=="chip")
 #set($TopAddrWidth = $ids.get_addr_width($top))
 #set($truncTopAddrWidth = ($INT.parseInt($TopAddrWidth) - 1))
-parameter logic [${truncTopAddrWidth}:0] ${topname.toUpperCase()}_ADDR = ${TopAddrWidth}'h${ids.get_prop($top,"address").replace("0x","")};
+parameter logic [31:0] ${topname.toUpperCase()}_ADDR = 32'h${ids.get_prop($top,"address").replace("0x","")};
 #foreach($chipchild in $ids.get_objects($top))
 #if($ids.get_type($chipchild)=="block")
 #foreach($blockchild in $ids.get_objects($chipchild))
@@ -35,7 +35,7 @@ parameter logic [${truncTopAddrWidth}:0] ${topname.toUpperCase()}_ADDR = ${TopAd
 #if($ids.get_type($top)=="block")
 #set($BlockAddrWidth = $ids.get_addr_width($top))
 #set($truncBlkAddrWidth = ($INT.parseInt($BlockAddrWidth) - 1))
-parameter logic [${truncBlkAddrWidth}:0] ${topname.toUpperCase()}_ADDR = ${BlockAddrWidth}'h${ids.get_prop($top,"address").replace("0x","")};
+parameter logic [31:0] ${topname.toUpperCase()}_ADDR = 32'h${ids.get_prop($top,"address").replace("0x","")};
 #foreach($blockchild in $ids.get_objects($top))
 #if($ids.get_prop($blockchild,"is_rsv") != "true")
 #if($ids.get_type($blockchild)=="reg")
@@ -53,21 +53,21 @@ parameter logic [${truncBlkAddrWidth}:0] ${topname.toUpperCase()}_ADDR = ${Block
 #macro(regDefine $regObj $addrWidth)
 #set($childname=$ids.get_prop($regObj,"name"))
 #set($truncRegAddrWidth = ($INT.parseInt($addrWidth) - 1))
-parameter logic [${truncRegAddrWidth}:0] ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR = ${addrWidth}'h${ids.get_prop($regObj,"address").replace("0x","")};
+parameter logic [31:0] ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR = ${topname.toUpperCase()}_ADDR + ${addrWidth}'h${ids.get_prop($regObj,"address").replace("0x","")};
 #end
 ## End Define For Register
 
 ## Start Define For Memory
 #macro(memDefine $memObj $addrWidth)
 #set($truncMemAddrWidth = ($INT.parseInt($addrWidth) - 1))
-parameter logic [${truncMemAddrWidth}:0] ${ids.getUniqueName($memObj,"block").toUpperCase()}_ADDR = ${addrWidth}'h${ids.get_prop($memObj,"address").replace("0x","")};
+parameter logic [31:0] ${ids.getUniqueName($memObj,"block").toUpperCase()}_ADDR = ${topname.toUpperCase()}_ADDR + ${addrWidth}'h${ids.get_prop($memObj,"address").replace("0x","")};
 #end
 ## End Define For Memory
 
 ## Start Define For Section
 #macro(SecDefine $secObj $addrWidth)
 #set($truncSecAddrWidth = ($INT.parseInt($addrWidth) - 1))
-parameter logic [${truncSecAddrWidth}:0] ${ids.getUniqueName($secObj,"block").toUpperCase()}_ADDR = ${addrWidth}'h${ids.get_prop($secObj,"address").replace("0x","")};
+parameter logic [31:0] ${ids.getUniqueName($secObj,"block").toUpperCase()}_ADDR = ${topname.toUpperCase()}_ADDR + ${addrWidth}'h${ids.get_prop($secObj,"address").replace("0x","")};
 #foreach($SecChild in $ids.get_objects($secObj))
 #if($ids.get_type($SecChild)=="reg")
 #regDefine($SecChild $addrWidth)
