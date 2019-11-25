@@ -335,18 +335,25 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
     struct {
 #foreach($field in $ids.get_fields($reg))
 #set($LowOffset = $INT.parseInt($ids.get_prop($field,"low_offset")))
+#if($reg_width <= 32)
+#set($DataType = $INT.parseInt("32"))
+#elseif(($reg_width > 32) && ($reg_width <= 64))
+#set($DataType = $INT.parseInt("64"))
+#else
+#set($DataType = $reg_width)
+#end
 #if(($LowOffset - $currLowOffset) == 0)
-        uint${reg_width}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+        uint${DataType}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 #else
 #set($resv_width = ($LowOffset - $currLowOffset))
-        uint${reg_width}_t  resv${currLowOffset} : ${resv_width};
-        uint${reg_width}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+        uint${DataType}_t  resv${currLowOffset} : ${resv_width};
+        uint${DataType}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 #end
 #set($currLowOffset = ($LowOffset + $INT.parseInt($ids.get_prop($field,"size"))))
 #end
 #if(($reg_width - $currLowOffset) != 0)
 #set($resv_end_width = ($reg_width - $currLowOffset))
-        uint${reg_width}_t  resv${currLowOffset} : ${resv_end_width};
+        uint${DataType}_t  resv${currLowOffset} : ${resv_end_width};
 #end
 ## COMMENTED FOR RESERVED FIELD BITS (TICKET 5549) 2July19
 ##typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
@@ -359,7 +366,7 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
 ##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 ##end
     };
-    uint${reg_width}_t reg;
+    uint${DataType}_t reg;
 } BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T;
 
 #foreach($field in $ids.get_fields($reg))
@@ -509,6 +516,13 @@ typedef enum {
 #set($offset="0x" + $INT.toHexString($offset_dec))
 #set($sw_access=$ids.get_prop($reg,"sw"))
 
+#if($reg_width <= 32)
+#set($DataType = $INT.parseInt("32"))
+#elseif(($reg_width > 32) && ($reg_width <= 64))
+#set($DataType = $INT.parseInt("64"))
+#else
+#set($DataType = $reg_width)
+#end
 #$def ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ADDR(index) \
          (BW_GET_REG_IND_ADDR_VAL_${top_name.toUpperCase()}(${offset}u,index,$el_size))
 #if($sw_access != "wo")
@@ -517,7 +531,7 @@ typedef enum {
 #end
 #if($sw_access != "ro")
 #$def WR_${blkInstName}__${hiername}(index,val) \
-         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg = (uint${reg_width}_t)(val)
+         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->reg = (uint${DataType}_t)(val)
 #end
 #foreach($field in $ids.get_fields($reg))
 #if($ids.get_prop($field,"is_rsv") != "true")
@@ -530,7 +544,7 @@ typedef enum {
 #end
 #if($sw_access != "ro")
 #$def WR_${blkInstName}__${hiername}__$ids.get_prop($field,"name")(index,val) \
-         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname = (uint${reg_width}_t)(val)
+         (BW_GET_REG_IND_ADDR_${top_name.toUpperCase()}(BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T,${offset}u,index,$el_size))->$fname = (uint${DataType}_t)(val)
 #end
 #end
 #end
@@ -620,7 +634,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.30
+    CHeader Ver 4.32
     IDS_version : $ids.get_ids_version()
 
     Purpose     : To access the register access data structures.

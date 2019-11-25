@@ -135,7 +135,12 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #if($largestStructElemLen < $currlength)
 #set($largestStructElemLen = $currlength)
 #end
+##set($myname=$structFillerName+"@@"+"FILLER_"+${filler_count}+"[0x"+"#get_filler_size($emptyObj)"+"];"+"@@"+"// FILLER - Offsets 0x"+$ids.get_longVar().toHexString($localStartAddr)+" to 0x"+$ids.get_longVar().toHexString($localEndAddr))
+#if ("#get_filler_size($emptyObj)" == " ")
+#set($myname=$structFillerName+"@@"+"FILLER_"+${filler_count}+";"+"@@"+"// FILLER - Offsets 0x"+$ids.get_longVar().toHexString($localStartAddr)+" to 0x"+$ids.get_longVar().toHexString($localEndAddr))
+#else
 #set($myname=$structFillerName+"@@"+"FILLER_"+${filler_count}+"[0x"+"#get_filler_size($emptyObj)"+"];"+"@@"+"// FILLER - Offsets 0x"+$ids.get_longVar().toHexString($localStartAddr)+" to 0x"+$ids.get_longVar().toHexString($localEndAddr))
+#end
 #set($dummy=$structElem.add($myname))
 #set($filler_count = $filler_count + 1)
 #end
@@ -319,7 +324,12 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #else
 #set($FinalSize = ($Size/$addressUnit))
 #end
+##set($FinalSizeHex= $ids.get_longVar().toHexString($FinalSize))
+#if ($FinalSize > 1)
 #set($FinalSizeHex= $ids.get_longVar().toHexString($FinalSize))
+#else
+#set($FinalSizeHex= " ")
+#end
 ${FinalSizeHex}#end
 
 #macro(get_filler_type $emptySpaceElem)
@@ -344,7 +354,7 @@ ${FillerType}#end
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.24
+    CHeader Ver 4.26
     IDS_version : $ids.get_ids_version()
 
     Purpose:
