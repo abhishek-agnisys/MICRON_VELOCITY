@@ -336,24 +336,26 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
 #foreach($field in $ids.get_fields($reg))
 #set($LowOffset = $INT.parseInt($ids.get_prop($field,"low_offset")))
 #if($reg_width <= 32)
-#set($DataType = $INT.parseInt("32"))
+#set($DataTypeWidth = $INT.parseInt("32"))
 #elseif(($reg_width > 32) && ($reg_width <= 64))
-#set($DataType = $INT.parseInt("64"))
+#set($DataTypeWidth = $INT.parseInt("64"))
 #else
-#set($DataType = $reg_width)
+#set($DataTypeWidth = $reg_width)
 #end
 #if(($LowOffset - $currLowOffset) == 0)
-        uint${DataType}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+        uint${DataTypeWidth}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 #else
 #set($resv_width = ($LowOffset - $currLowOffset))
-        uint${DataType}_t  resv${currLowOffset} : ${resv_width};
-        uint${DataType}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
+        uint${DataTypeWidth}_t  resv${currLowOffset} : ${resv_width};
+        uint${DataTypeWidth}_t  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 #end
 #set($currLowOffset = ($LowOffset + $INT.parseInt($ids.get_prop($field,"size"))))
 #end
-#if(($reg_width - $currLowOffset) != 0)
-#set($resv_end_width = ($reg_width - $currLowOffset))
-        uint${DataType}_t  resv${currLowOffset} : ${resv_end_width};
+####if(($reg_width - $currLowOffset) != 0) (MICRON REQ 6299)
+#if(($DataTypeWidth - $currLowOffset) != 0)
+####set($resv_end_width = ($reg_width - $currLowOffset)) (MICRON REQ 6299)
+#set($resv_end_width = ($DataTypeWidth - $currLowOffset))
+        uint${DataTypeWidth}_t  resv${currLowOffset} : ${resv_end_width};
 #end
 ## COMMENTED FOR RESERVED FIELD BITS (TICKET 5549) 2July19
 ##typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
@@ -366,7 +368,7 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
 ##        UINT${reg_width}  $ids.get_prop($field,"name")  : $math.abs($ids.get_offset_value($field));
 ##end
     };
-    uint${DataType}_t reg;
+    uint${DataTypeWidth}_t reg;
 } BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T;
 
 #foreach($field in $ids.get_fields($reg))
