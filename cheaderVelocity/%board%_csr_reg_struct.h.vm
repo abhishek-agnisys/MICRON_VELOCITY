@@ -264,7 +264,11 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #if($largestStructElemLen < $currlength)
 #set($largestStructElemLen = $currlength)
 #end
+#if ($memCount > 1)
 #set($myname=$structElemNameMem+"@@"+${BlockName}+${hiernameMemInst}+"Acc[0x"+$INT.toHexString($memCount)+"];"+"@@"+"// Offset 0x"+$INT.toHexString($absoluteMemOffset))
+#else
+#set($myname=$structElemNameMem+"@@"+${BlockName}+${hiernameMemInst}+"Acc;"+"@@"+"// Offset 0x"+$INT.toHexString($absoluteMemOffset))
+#end
 #set($dummy=$structElem.add($myname))
 #end
 
@@ -354,7 +358,7 @@ ${FillerType}#end
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.26
+    CHeader Ver 4.28
     IDS_version : $ids.get_ids_version()
 
     Purpose:
