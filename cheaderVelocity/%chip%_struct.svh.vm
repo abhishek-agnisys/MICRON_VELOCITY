@@ -1,0 +1,312 @@
+## My SV Header struct template.
+#set($top=$ids.get_top())
+$ids.get_header($top)
+
+##########################################################
+##            Main Body for SV header package             ##
+##########################################################
+
+#set($topname=$ids.get_prop($top,"name"))
+##FOR SUPPORT AT BOARD
+#if($ids.get_type($top)=="board")
+#createPackageBoard()
+#end
+
+#if($ids.get_type($top)=="chip")
+#createPackageChip()
+#end
+
+#if($ids.get_type($top)=="block")
+#createPackageBlock()
+#end
+
+##FOR SUPPORT AT BOARD
+#macro(createPackageBoard)
+
+package ${topname}_header_pkg;
+#foreach($reg in $ids.get_all_reg($top))
+#if($ids.get_prop($reg,"type")!="mem")
+#set($parentName=$ids.get_prop($ids.get_parent($reg),"name"))
+#regStruct($reg $parentName)
+#end
+#end
+##Start For Section inside section
+#foreach($section in $ids.get_all_section($top))
+#set($parentName=$ids.get_prop($ids.get_parent($section),"name"))
+#sectionStruct($section $parentName)
+#end
+##END For Section inside section
+#foreach($block in $ids.get_all_block($top))
+#set($blockName=${ids.get_prop($block,"name")})
+#set($ChipName=$ids.get_prop($ids.get_parent($block),"name"))
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($topChild in $ids.get_objects($block))
+#if($ids.get_type($topChild)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($topChild,"address"),$ids.get_prop($topChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
+#if($ids.get_prop($topChild,"count").equals(" "))
+#if($ids.get_type($top).equals("board"))
+${ChipName}_${blockName}_${ids.get_prop($topChild,"name")} ${ids.get_prop($topChild,"name")};
+#else
+${blockName}_${ids.get_prop($topChild,"name")} ${ids.get_prop($topChild,"name")};
+#end
+ #else
+#if($ids.get_type($top).equals("board"))
+${ChipName}_${blockName}_${ids.get_prop($topChild,"name")}[$ids.get_prop($topChild,"count")] ${ids.get_prop($topChild,"name")};
+#else
+${blockName}_${ids.get_prop($topChild,"name")}[$ids.get_prop($topChild,"count")] ${ids.get_prop($topChild,"name")};
+#end
+#end
+#elseif($ids.get_type($topChild)=="mem")
+##ids.get_prop($topChild,"name")
+#if($ids.get_prop($topChild,"count")==" ")
+   logic [$ids.mem_width($ids.get_reg_width($topChild))] ${ids.get_prop($topChild,"name")};
+#else
+   logic [$ids.mem_width($ids.get_prop($topChild,"count")):0][$ids.mem_width($ids.get_reg_width($topChild)):0] ${ids.get_prop($topChild,"name")};
+#end
+#end
+#end
+} ${ChipName}_${blockName};
+#end
+
+## only for top Chip
+#foreach($chip in $ids.get_objects($top))
+#if($ids.get_type($chip)=="chip")
+#set($chipName=${ids.get_prop($chip,"name")})
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($block in $ids.get_objects($chip))
+#if($ids.get_type($block)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($block,"address"),$ids.get_prop($block,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($block)=="block")
+   ${chipName}_${ids.get_prop($block,"name")} ${ids.get_prop($block,"name")};
+#end
+#end
+} ${topname}_${chipName};
+#end
+#end
+
+## only for top Board
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($chip in $ids.get_objects($top))
+#if($ids.get_type($chip)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($chip,"address"),$ids.get_prop($chip,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($chip)=="chip")
+   ${topname}_${ids.get_prop($chip,"name")} ${ids.get_prop($chip,"name")};
+#end
+#end
+} ${topname};
+endpackage
+#end
+
+#macro(createPackageChip)
+
+package ${topname}_header_pkg;
+#foreach($reg in $ids.get_all_reg($top))
+#if($ids.get_prop($reg,"type")!="mem")
+#set($parentName=$ids.get_prop($ids.get_parent($reg),"name"))
+#regStruct($reg $parentName)
+#end
+#end
+##Start For Section inside section
+#foreach($section in $ids.get_all_section($top))
+#set($parentName=$ids.get_prop($ids.get_parent($section),"name"))
+#sectionStruct($section $parentName)
+#end
+##END For Section inside section
+#foreach($block in $ids.get_objects($top))
+#if($ids.get_type($block)=="block")
+#set($blockName=${ids.get_prop($block,"name")})
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($topChild in $ids.get_objects($block))
+#if($ids.get_type($topChild)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($topChild,"address"),$ids.get_prop($topChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
+#if($ids.get_prop($topChild,"count").equals(" "))
+${blockName}_${ids.get_prop($topChild,"name")} ${ids.get_prop($topChild,"name")};
+ #else
+${blockName}_${ids.get_prop($topChild,"name")}[$ids.get_prop($topChild,"count")] ${ids.get_prop($topChild,"name")};
+#end
+#elseif($ids.get_type($topChild)=="mem")
+##ids.get_prop($topChild,"name")
+#if($ids.get_prop($topChild,"count")==" ")
+   logic [$ids.mem_width($ids.get_reg_width($topChild))] ${ids.get_prop($topChild,"name")};
+#else
+   logic [$ids.mem_width($ids.get_prop($topChild,"count")):0][$ids.mem_width($ids.get_reg_width($topChild)):0] ${ids.get_prop($topChild,"name")};
+#end
+#end
+#end
+} ${topname}_${blockName};
+#end
+#end
+## only for top Chip
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($block in $ids.get_objects($top))
+#if($ids.get_type($block)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($block,"address"),$ids.get_prop($block,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($block)=="block")
+   ${topname}_${ids.get_prop($block,"name")} ${ids.get_prop($block,"name")};
+#end
+#end
+} ${topname};
+endpackage
+#end
+
+#macro(createPackageBlock)
+package ${topname}_header_pkg;
+#foreach($reg in $ids.get_all_reg($top))
+#if($ids.get_prop($reg,"type")!="mem")
+#set($parentName=$ids.get_prop($$ids.get_parent($reg),"name"))
+#regStruct($reg $parentName)
+#end
+#end
+##Start For Section inside section
+#foreach($section in $ids.get_all_section($top))
+#set($parentName=$ids.get_prop($$ids.get_parent($section),"name"))
+#sectionStruct($section $parentName)
+#end
+##END For Section inside section
+## only for top
+
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($topChild in $ids.get_objects($top))
+#if($ids.get_type($topChild)=="emptyspace")
+ logic [$ids.get_filler($ids.get_prop($topChild,"address"),$ids.get_prop($topChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
+#if($ids.get_prop($topChild,"count").equals(" "))
+   ${topname}_${ids.get_prop($topChild,"name")} ${ids.get_prop($topChild,"name")};
+#else
+   ${topname}_${ids.get_prop($topChild,"name")}[$ids.get_prop($topChild,"count")-1 : 0] ${ids.get_prop($topChild,"name")};
+#end
+#elseif($ids.get_type($topChild)=="mem")
+##ids.get_prop($topChild,"name")
+#if($ids.get_prop($topChild,"count")==" ")
+   logic [$ids.mem_width($ids.get_reg_width($topChild)):0] ${ids.get_prop($topChild,"name")};
+#else
+   logic [$ids.mem_width($ids.get_prop($topChild,"count")):0][$ids.mem_width($ids.get_reg_width($topChild)):0] ${ids.get_prop($topChild,"name")};
+#end
+  #end
+#end
+} ${topname};
+
+endpackage
+#end
+
+## Start TypeDef Struct for Section Structure
+#macro (sectionStruct $secObj $Tname)
+
+#if($ids.get_type($secObj)!="mem")
+typedef struct packed {
+#set($parant=${ids.get_parent($secObj)})
+#set($filler_pos=0)
+#foreach($secObjChild in $ids.get_objects($secObj))
+#if($ids.get_type($secObjChild)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($secObjChild,"address"),$ids.get_prop($secObjChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($secObjChild)=="reggroup")
+#if($ids.get_type($top)=="chip")
+   $ids.getUniqueName(${secObjChild} , "block") ${ids.get_prop($secObjChild,"name")};
+#else
+   ${ids.get_prop($secObj,"name")}_${ids.get_prop($secObjChild,"name")} ${ids.get_prop($secObjChild,"name")};
+#end
+#end
+#if($ids.get_type($secObjChild)=="reg")
+##TODO Check
+#set($parant2=${ids.get_parent($secObjChild)})
+##${Tname}_${ids.get_prop($parant2,"name")}_${ids.get_prop($secObjChild,"name")} ${ids.get_prop($secObjChild,"name")};
+#if($ids.get_prop($secObjChild,"count").equals(" "))
+#if($ids.get_type($top).equals("board"))
+    $ids.getUniqueName(${secObjChild} , "chip") ${ids.get_prop($secObjChild,"name")};
+#else
+   $ids.getUniqueName(${secObjChild} , "block") ${ids.get_prop($secObjChild,"name")};
+#end
+#else
+#if($ids.get_type($top).equals("board"))
+    ${ids.getUniqueName(${secObjChild} , "chip")}[$ids.get_prop($secObjChild,"count")-1 : 0] ${ids.get_prop($secObjChild,"name")};
+#else
+   ${ids.getUniqueName(${secObjChild} , "block")}[$ids.get_prop($secObjChild,"count")-1 : 0] ${ids.get_prop($secObjChild,"name")};
+#end
+#end
+#end
+#end
+##TODO Check
+#if($ids.get_type($top).equals("block"))
+#set($par=$ids.get_parent($secObj))
+#if($ids.get_type($par).equals("reggroup"))
+} ${ids.get_prop($par, "name")}_${ids.get_prop($secObj, "name")};
+#else
+} $ids.getUniqueName($secObj,"block");
+#end
+#elseif($ids.get_type($top).equals("chip"))
+} $ids.getUniqueName($secObj,"block");
+#elseif($ids.get_type($top).equals("board"))
+} $ids.getUniqueName($secObj,"chip");
+#end
+
+#end
+#end
+## End Macro for Section Structure
+
+
+
+## Start Macro for Register Structure
+#macro (regStruct $regObj $Tname)
+#set($parant=${ids.get_parent($regObj)})
+#set($parantName=$ids.get_prop($parant,"name"))
+
+/*-------------------------------------------
+Reg: ${parantName.toUpperCase()}/${ids.get_prop($regObj,"name").toUpperCase()}
+$ids.get_prop($regObj,"doc")
+-------------------------------------------*/
+#set ($flag="0")
+typedef struct packed {
+#set($temp = [])
+#foreach($fld in $ids.get_objects($regObj))
+#if($ids.get_type($fld).equals("padding"))
+   logic [$ids.get_prop($fld,"offset")] padding_$ids.get_prop($fld,"high_offset");
+#end
+### CODE COMMENTED FOR PACKED STRUCT
+##if($ids.get_type($fld).equals("field"))
+##if($ids.get_prop($fld,"low_offset").equals($ids.get_prop($fld,"high_offset")))
+##   logic $ids.get_prop($fld,"name");
+##else
+##   logic [$ids.get_prop($fld,"offset")] $ids.get_prop($fld,"name");
+##end
+##end
+#end
+#foreach($fld in $ids.getReverseFieldList($regObj))
+#if($ids.get_type($fld).equals("field"))
+#if($ids.get_prop($fld,"low_offset").equals($ids.get_prop($fld,"high_offset")))
+   logic $ids.get_prop($fld,"name");
+#else
+   logic [$ids.get_prop($fld,"offset")] $ids.get_prop($fld,"name");
+#end
+#end
+#end
+#if($ids.get_type($top).equals("board"))
+} $ids.getUniqueName($regObj,"chip");
+#else
+} $ids.getUniqueName($regObj,"block");
+#end
+#end
+## End Macro for Register Structure
+
+
