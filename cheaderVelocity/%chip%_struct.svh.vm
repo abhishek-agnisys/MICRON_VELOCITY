@@ -25,7 +25,7 @@ $ids.get_header($top)
 
 package ${topname}_header_pkg;
 #foreach($reg in $ids.get_all_reg($top))
-#if($ids.get_prop($reg,"type")!="mem")
+#if(($ids.get_prop($reg,"type")!="mem") && ($ids.get_prop($ids.get_parent($reg),"type")!="mem"))
 #set($parentName=$ids.get_prop($ids.get_parent($reg),"name"))
 #regStruct($reg $parentName)
 #end
@@ -111,7 +111,7 @@ endpackage
 
 package ${topname}_header_pkg;
 #foreach($reg in $ids.get_all_reg($top))
-#if($ids.get_prop($reg,"type")!="mem")
+#if(($ids.get_prop($reg,"type")!="mem") && ($ids.get_prop($ids.get_parent($reg),"type")!="mem"))
 #set($parentName=$ids.get_prop($ids.get_parent($reg),"name"))
 #regStruct($reg $parentName)
 #end
@@ -122,9 +122,9 @@ package ${topname}_header_pkg;
 #sectionStruct($section $parentName)
 #end
 ##END For Section inside section
-#foreach($block in $ids.get_objects($top))
-#if($ids.get_type($block)=="block")
+#foreach($block in $ids.get_all_block($top))
 #set($blockName=${ids.get_prop($block,"name")})
+
 typedef struct packed {
 #set($filler_pos=0)
 #foreach($topChild in $ids.get_objects($block))
@@ -134,9 +134,9 @@ typedef struct packed {
 #end
 #if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
 #if($ids.get_prop($topChild,"count").equals(" "))
-${blockName}_${ids.get_prop($topChild,"name")} ${ids.get_prop($topChild,"name")};
- #else
-${blockName}_${ids.get_prop($topChild,"name")}[$ids.get_prop($topChild,"count")] ${ids.get_prop($topChild,"name")};
+   ${blockName}_${ids.get_prop($topChild,"name")} ${ids.get_prop($topChild,"name")};
+#else
+   ${blockName}_${ids.get_prop($topChild,"name")}[$ids.get_prop($topChild,"count")] ${ids.get_prop($topChild,"name")};
 #end
 #elseif($ids.get_type($topChild)=="mem")
 ##ids.get_prop($topChild,"name")
@@ -149,7 +149,7 @@ ${blockName}_${ids.get_prop($topChild,"name")}[$ids.get_prop($topChild,"count")]
 #end
 } ${topname}_${blockName};
 #end
-#end
+
 ## only for top Chip
 typedef struct packed {
 #set($filler_pos=0)
@@ -167,9 +167,10 @@ endpackage
 #end
 
 #macro(createPackageBlock)
+
 package ${topname}_header_pkg;
 #foreach($reg in $ids.get_all_reg($top))
-#if($ids.get_prop($reg,"type")!="mem")
+#if(($ids.get_prop($reg,"type")!="mem") && ($ids.get_prop($ids.get_parent($reg),"type")!="mem"))
 #set($parentName=$ids.get_prop($$ids.get_parent($reg),"name"))
 #regStruct($reg $parentName)
 #end
@@ -226,6 +227,14 @@ typedef struct packed {
    $ids.getUniqueName(${secObjChild} , "block") ${ids.get_prop($secObjChild,"name")};
 #else
    ${ids.get_prop($secObj,"name")}_${ids.get_prop($secObjChild,"name")} ${ids.get_prop($secObjChild,"name")};
+#end
+#end
+#if($ids.get_type($secObjChild)=="mem")
+##ids.get_prop($topChild,"name")
+#if($ids.get_prop($secObjChild,"count")==" ")
+   logic [$ids.mem_width($ids.get_reg_width($secObjChild))] ${ids.get_prop($secObjChild,"name")};
+#else
+   logic [$ids.mem_width($ids.get_prop($secObjChild,"count")):0][$ids.mem_width($ids.get_reg_width($secObjChild)):0] ${ids.get_prop($secObjChild,"name")};
 #end
 #end
 #if($ids.get_type($secObjChild)=="reg")
