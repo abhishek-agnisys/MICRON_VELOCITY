@@ -70,11 +70,11 @@ $ids.init_cheader()
     CHeader Ver 2.0
     IDS_version : $ids.get_ids_version()
 
-    Purpose     : It is a wrapper file which include the all supported
-                  reg_struct.h files.
+    Purpose     :	It's a wrapper file which include the all supported
+					reg_struct.h files.
 
-    Description : FW will include the this single file to include all
-                  the structures in FW code.
+    Description :	FW will include the file to have all the structures in
+					FW code.
 
 ******************************************************************************/
 

@@ -22,7 +22,7 @@
 6. The reggroup-inside-reggroup cases exist in XML exclusively (i.e. the object
    "obj3" in this template) due to the format issue
 
-Cheader Ver 3.8
+Cheader Ver 3.9
 ================================================================================
 *#
 /*----------------------------------------------------------------------------------------------
@@ -52,17 +52,12 @@ Cheader Ver 3.8
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    Purpose:
-    <Put purpose here>
+    Purpose		: This file has global information of address and inst_names.
 
-    Description:
-    <Put description here>
+    Description	: FW will be used access the base address of each instance .
 
 ******************************************************************************/
-
-
-${hash}ifndef __GLOBAL_INSTANCES_H
-${hash}define __GLOBAL_INSTANCES_H
+${hash}pragma once
 
 ${hash}ifdef __cplusplus
 extern "C"
@@ -218,7 +213,7 @@ ${hash}${def} BW_${blockName.toUpperCase}_ADDRESS
  *                values
  *
  ****************************************************************************/
-extern UINT32 BW_inst_addr[BW_NUM_INSTANCES];
+extern uint32_t BW_inst_addr[BW_NUM_INSTANCES];
 
 /****************************************************************************
  *
@@ -234,7 +229,6 @@ extern const char* BW_inst_name[BW_NUM_INSTANCES];
 #ifdef __cplusplus
 }
 #endif
-#endif  /* __GLOBAL_INSTANCES_H */
 
 
 

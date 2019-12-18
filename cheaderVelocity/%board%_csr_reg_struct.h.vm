@@ -361,11 +361,10 @@ ${FillerType}#end
     CHeader Ver 4.28
     IDS_version : $ids.get_ids_version()
 
-    Purpose:
-    <Put purpose here>
+    Purpose     : To access the register structures through pointers.
 
-    Description:
-    <Put description here>
+    Description : The file shall be used to access the register structure
+                  definitions by using the pointer base access .
 
 #if($ids.get_prop($block,"orig_path") != " ")
 #set($path=$ids.get_prop($block,"orig_path"))
