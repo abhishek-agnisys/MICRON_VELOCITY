@@ -149,6 +149,7 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #set($reggrpCount=$ids.get_prop($reggroupObj,"count"))
 #if($reggrpCount != " " && $reggrpCount != "1")
 #set($varcountreggrp = $INT.parseInt($reggrpCount) - 1)
+#set($truncFlagRepeat="")
 #foreach($RegGrpnumber in [0..${varcountreggrp}])
 #set($absoluteOffsetRegGrpR= (($RegGrpnumber) * ($INT.parseInt($ids.get_prop($reggroupObj,"size")))) + ($absoluteOffsetRegGrp))
 #foreach($section_obj in $ids.get_objects($reggroupObj))
@@ -167,17 +168,32 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #mblockStructMem ($section_obj $blkInstName $block $absoluteMemOffset)
 #else
 #if($section_obj_type == "reg")
+#set($currRegGrpNameRepeat = "_"+$ids.get_prop($ids.get_parent($reggroupObj),"name"))
+#set($IndexRepeat =$uniqueReggrpName.lastIndexOf($currRegGrpNameRepeat))
+#if($IndexRepeat != -1)
+#set($truncFlagRepeat="true")
+#set($lastIndexRepeat = ($IndexRepeat+$currRegGrpNameRepeat.length()))
+#set($uniqueReggrpName=$uniqueReggrpName.substring(0,$IndexRepeat)+""+$uniqueReggrpName.substring($lastIndexRepeat))
+#end
 #set($reggrpRegCount=$ids.get_prop($section_obj,"count"))
 #if($reggrpRegCount != " " && $reggrpRegCount != "1")
 #set($varcountreggrpReg = $INT.parseInt($reggrpRegCount) - 1)
 #foreach($number in [0..${varcountreggrpReg}])
 #set($absoluteOffset= (($number) * ($INT.parseInt($ids.get_prop(section_obj,"size")))) + ($INT.parseInt($ids.get_prop($section_obj,"offset"))) + $absoluteOffsetRegGrpR)
+#if($truncFlagRepeat == "true")
+#set($unqRegName=$uniqueReggrpName+$currRegGrpNameRepeat+"_"+$RegGrpnumber+$ids.get_prop($section_obj,"name")+"_"+$number)
+#else
 #set($unqRegName=$uniqueReggrpName+"_"+$RegGrpnumber+$ids.get_prop($section_obj,"name")+"_"+$number)
+#end
 #mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
 #end
 #else
 #set($absoluteOffset= $INT.parseInt($ids.get_prop($section_obj,"offset")) + $absoluteOffsetRegGrpR)
+#if($truncFlagRepeat == "true")
+#set($unqRegName=$uniqueReggrpName+$currRegGrpNameRepeat+"_"+$RegGrpnumber+$ids.get_prop($section_obj,"name"))
+#else
 #set($unqRegName=$uniqueReggrpName+"_"+$RegGrpnumber+$ids.get_prop($section_obj,"name"))
+#end
 #mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
 #end
 #end
@@ -185,6 +201,7 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #end
 #end
 #else
+#set($truncFlag="")
 #foreach($section_obj in $ids.get_objects($reggroupObj))
 #set($section_obj_type=$ids.get_type($section_obj))
 #if($section_obj_type == "emptyspace")
@@ -200,17 +217,32 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #mblockStructMem ($section_obj $blkInstName $block $absoluteMemOffset)
 #else
 #if($section_obj_type == "reg")
+#set($currRegGrpName = "_"+$ids.get_prop($ids.get_parent($reggroupObj),"name"))
+#set($Index =$uniqueReggrpName.lastIndexOf($currRegGrpName))
+#if($Index != -1)
+#set($truncFlag="true")
+#set($lastIndex = ($Index+$currRegGrpName.length()))
+#set($uniqueReggrpName=$uniqueReggrpName.substring(0,$Index)+""+$uniqueReggrpName.substring($lastIndex))
+#end
 #set($reggrpRegCount=$ids.get_prop($section_obj,"count"))
 #if($reggrpRegCount != " " && $reggrpRegCount != "1")
 #set($varcountreggrpReg = $INT.parseInt($reggrpRegCount) - 1)
 #foreach($number in [0..${varcountreggrpReg}])
 #set($absoluteOffset= (($number) * ($INT.parseInt($ids.get_prop($section_obj,"size")))) + ($INT.parseInt($ids.get_prop($section_obj,"offset"))) + $absoluteOffsetRegGrp)
+#if($truncFlag == "true")
+#set($unqRegName=$uniqueReggrpName+$currRegGrpName+$ids.get_prop($section_obj,"name")+"_"+$number)
+#else
 #set($unqRegName=$uniqueReggrpName+$ids.get_prop($section_obj,"name")+"_"+$number)
+#end
 #mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
 #end
 #else
 #set($absoluteOffset= $INT.parseInt($ids.get_prop($section_obj,"offset")) + $absoluteOffsetRegGrp)
+#if($truncFlag == "true")
+#set($unqRegName=$uniqueReggrpName+$currRegGrpName+$ids.get_prop($section_obj,"name"))
+#else
 #set($unqRegName=$uniqueReggrpName+$ids.get_prop($section_obj,"name"))
+#end
 #mblockStructReg ($section_obj $blkInstName $block $unqRegName $absoluteOffset)
 #end
 #end
@@ -358,7 +390,7 @@ ${FillerType}#end
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.28
+    CHeader Ver 4.30
     IDS_version : $ids.get_ids_version()
 
     Purpose     : To access the register structures through pointers.
