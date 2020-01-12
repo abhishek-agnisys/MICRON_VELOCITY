@@ -189,8 +189,9 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #mblockStructMem ($section_obj $blkInstName $block $absoluteMemOffset)
 #else
 #if($section_obj_type == "reg")
-#set($currRegGrpNameRepeat = "_"+$ids.get_prop($ids.get_parent($reggroupObj),"name"))
-#set($IndexRepeat =$uniqueReggrpName.lastIndexOf($currRegGrpNameRepeat))
+#set($ReduceNameRepeat="true")
+##set($currRegGrpNameRepeat = "_"+$ids.get_prop($ids.get_parent($reggroupObj),"name"))
+##set($IndexRepeat =$uniqueReggrpName.lastIndexOf($currRegGrpNameRepeat))
 ##if(($IndexRepeat != -1)&& ($truncFlagRepeat==""))
 ##set($truncFlagRepeat="true")
 ##set($lastIndexRepeat = ($IndexRepeat+$currRegGrpNameRepeat.length()))
@@ -259,8 +260,9 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #mblockStructMem ($section_obj $blkInstName $block $absoluteMemOffset)
 #else
 #if($section_obj_type == "reg")
-#set($currRegGrpName = "_"+$ids.get_prop($ids.get_parent($reggroupObj),"name"))
-#set($Index =$uniqueReggrpName.lastIndexOf($currRegGrpName))
+#set($ReduceName="true")
+##set($currRegGrpName = "_"+$ids.get_prop($ids.get_parent($reggroupObj),"name"))
+##set($Index =$uniqueReggrpName.lastIndexOf($currRegGrpName))
 ##if(($Index != -1) && ($truncFlag==""))
 ##set($truncFlag="true")
 ##set($lastIndex = ($Index+$currRegGrpName.length()))
