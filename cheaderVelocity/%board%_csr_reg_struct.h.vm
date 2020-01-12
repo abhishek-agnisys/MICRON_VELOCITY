@@ -149,7 +149,7 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #set($reggrpCount=$ids.get_prop($reggroupObj,"count"))
 #if($reggrpCount != " " && $reggrpCount != "1")
 #set($varcountreggrp = $INT.parseInt($reggrpCount) - 1)
-#set($truncFlagRepeat="")
+##set($truncFlagRepeat="")
 #set($ReduceNameRepeat="")
 #foreach($RegGrpnumber in [0..${varcountreggrp}])
 #set($absoluteOffsetRegGrpR= (($RegGrpnumber) * ($INT.parseInt($ids.get_prop($reggroupObj,"size")))) + ($absoluteOffsetRegGrp))
@@ -176,7 +176,7 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #if($IndexSecNameRepeat != -1)
 #set($lastIndexSecNameRepeat = ($IndexSecNameRepeat+$currSecName.length()))
 #set($unqReggrpName=$uniqueReggrpName.substring(0,$IndexSecNameRepeat)+""+$uniqueReggrpName.substring($lastIndexSecNameRepeat)+"_"+$RegGrpnumber+"_"+$ids.get_prop($section_obj,"name"))
-#set($ReduceName="true")
+#set($ReduceNameRepeat="true")
 #end
 #end
 #set($currSecCompNameRepeat="_"+$ids.get_prop($section_obj,"name"))
@@ -222,7 +222,7 @@ volatile ${blkInstName}_Block_t* p${blkInstName}_Block = (${blkInstName}_Block_t
 #end
 #end
 #else
-#set($truncFlag="")
+##set($truncFlag="")
 #set($ReduceName="")
 #foreach($section_obj in $ids.get_objects($reggroupObj))
 #set($section_obj_type=$ids.get_type($section_obj))
