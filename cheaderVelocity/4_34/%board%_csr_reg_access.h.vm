@@ -303,7 +303,7 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiernameMem.toLowerCase()}_acc_
 #set($ancestorName2=$ids.get_prop($ancestorNode2,"name"))
 #set ($hiername=$ancestorName2+"_"+$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
 #else
-#set ($hiername=$ancestorName1+$ancestorName+"_"+$parentName+"_"+$regName)
+#set ($hiername=$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
 #end
 #else
 #set ($hiername=$ancestorName+"_"+$parentName+"_"+$regName)
@@ -666,7 +666,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.35
+    CHeader Ver 4.34
     IDS_version : $ids.get_ids_version()
 
     Purpose     : To access the register access data structures.
