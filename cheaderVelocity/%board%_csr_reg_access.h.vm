@@ -302,21 +302,28 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiernameMem.toLowerCase()}_acc_
 #if($ids.get_type($ancestorNode2)!="block")
 #set($ancestorName2=$ids.get_prop($ancestorNode2,"name"))
 #set ($hiername=$ancestorName2+"_"+$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
+#set ($hiernameStruct=$ancestorName2+"_"+$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
 #else
 #set ($hiername=$ancestorName1+$ancestorName+"_"+$parentName+"_"+$regName)
+#set ($hiernameStruct=$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
 #end
 #else
 #set ($hiername=$ancestorName+"_"+$parentName+"_"+$regName)
+#set ($hiernameStruct=$ancestorName+"_"+$parentName+"_"+$regName)
 #end
 #else
 #set ($hiername=$parentName+"_"+$regName)
+#set ($hiernameStruct=$parentName+"_"+$regName)
 #end
 #else
 #set($hiername=$regName)
+#set($hiernameStruct=$regName)
 #end
 
 #set($hiername=$hiername.replace("_csr", ""))
 #set($hiername=$hiername.replace("_CSR", ""))
+#set($hiernameStruct=$hiernameStruct.replace("_csr", ""))
+#set($hiernameStruct=$hiernameStruct.replace("_CSR", ""))
 #set($parentName=$ids.get_prop($ids.get_parent($reg),"name"))
 
 
@@ -331,7 +338,7 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiernameMem.toLowerCase()}_acc_
 #set($currLowOffset=0)
 #set($LowOffset=0)
 
-typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
+typedef union bw_${blkInstName.toLowerCase()}__${hiernameStruct.toLowerCase()}_acc_t {
     struct {
 #foreach($field in $ids.get_fields($reg))
 #set($LowOffset = $INT.parseInt($ids.get_prop($field,"low_offset")))
@@ -369,7 +376,7 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiername.toLowerCase()}_acc_t {
 ##end
     };
     uint${DataTypeWidth}_t reg;
-} BW_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_ACC_T;
+} BW_${blkInstName.toUpperCase()}__${hiernameStruct.toUpperCase()}_ACC_T;
 
 #foreach($field in $ids.get_fields($reg))
 #set($field_name=$ids.get_prop($field,"name"))
