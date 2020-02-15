@@ -305,7 +305,7 @@ typedef union bw_${blkInstName.toLowerCase()}__${hiernameMem.toLowerCase()}_acc_
 #set ($hiernameStruct=$ancestorName2+"_"+$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
 #else
 #set ($hiername=$ancestorName1+$ancestorName+"_"+$parentName+"_"+$regName)
-#set ($hiernameStruct=$ancestorName1+"_"+$ancestorName+"_"+$parentName+"_"+$regName)
+#set ($hiernameStruct=$ancestorName1+$ancestorName+"_"+$parentName+"_"+$regName)
 #end
 #else
 #set ($hiername=$ancestorName+"_"+$parentName+"_"+$regName)
