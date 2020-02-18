@@ -24,7 +24,7 @@
 ================================================================================
 *#
 #set($hash="#")
-$ids.init_cheader()				   
+$ids.init_cheader()
 #set($top=$ids.get_top())
 #set($put="include")
 #set($def="define")
@@ -147,7 +147,7 @@ $ids.init_cheader()
 
 #macro(mDumpAMemory $sec $blkInstName)
 #set($mem_name=$ids.get_prop($sec,"name"))
-#set($reg_width=$INT.parseInt($ids.get_prop($sec,"size")) * 8)															  
+#set($reg_width=$INT.parseInt($ids.get_prop($sec,"size")) * 8)
 #set($off_str=$ids.get_prop($sec,"offset"))
 #*
 #set($reg_nameMem=$ids.get_prop($sec,"name"))
