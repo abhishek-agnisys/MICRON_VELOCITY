@@ -392,15 +392,15 @@ ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_WRITEMASK 
 ## FOR MULTIDIMENSIONAL DEFAULT VALUE SUPPORT UPDATED (TICKET 6574) 20Feb20
 #set($defVal = $ids.get_prop($field, "default"))
 #if($defVal == "MultiDimArray")
-#if(!$ids.getMultiDimensionalFldVal($field).isEmpty())
+#if(!$ids.getMultiDimensionalFldValList($field).isEmpty())
 ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE(index)\
 #set($CurrIndex=0)
-#foreach($MultiDimVal in $ids.getMultiDimensionalFldVal($field))
+#foreach($MultiDimVal in $ids.getMultiDimensionalFldValList($field))
 #set($CurrIndexHexVal="0x" + $INT.toHexString($CurrIndex))
 #if($CurrIndex != 0) : #else   #end(index == ${CurrIndexHexVal} ? ${MultiDimVal} \
 #set($CurrIndex = $CurrIndex + 1)
 #end
-#foreach($MultiDimVal in $ids.getMultiDimensionalFldVal($field)))#end
+#foreach($MultiDimVal in $ids.getMultiDimensionalFldValList($field)))#end
 
 #end
 #else
