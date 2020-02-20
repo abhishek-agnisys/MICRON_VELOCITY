@@ -389,31 +389,34 @@ ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_WRITEMASK 
 ####set($defVal="0b" + $ids.get_prop($field, "default"))
 ###set($defVal="0x" + $ids.convertToHexType($ids.get_prop($field, "default")))
 ##${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE  $defVal
-## FOR MULTIDIMENSIONAL DEFAULT VALUE SUPPORT (TICKET 6508) 6Jan20
+## FOR MULTIDIMENSIONAL DEFAULT VALUE SUPPORT UPDATED (TICKET 6574) 20Feb20
 #set($defVal = $ids.get_prop($field, "default"))
 #if($defVal == "MultiDimArray")
-#if($INT.parseInt($ids.get_prop($field,"size")) <= 32)
-uint32_t ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE_ARRAY$ids.getMultiDimensionalFldVal($field, "size") = $ids.getMultiDimensionalFldVal($field, "value");
-#else
-uint64_t ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE_ARRAY$ids.getMultiDimensionalFldVal($field, "size") = $ids.getMultiDimensionalFldVal($field, "value");
+#if(!$ids.getMultiDimensionalFldVal($field).isEmpty())
+${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE(index)\
+#set($CurrIndex=0)
+#foreach($MultiDimVal in $ids.getMultiDimensionalFldVal($field))
+#set($CurrIndexHexVal="0x" + $INT.toHexString($CurrIndex))
+#if($CurrIndex != 0) : #else   #end(index == ${CurrIndexHexVal} ? ${MultiDimVal} \
+#set($CurrIndex = $CurrIndex + 1)
 #end
-${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE(index)(\
-        (${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE_ARRAY[index])\
-        )
+#foreach($MultiDimVal in $ids.getMultiDimensionalFldVal($field)))#end
+
+#end
 #else
 #set($FldDefVal="0x" + $ids.convertToHexType($ids.get_prop($field, "default")))
 ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE  $FldDefVal
 #end
 #end
 
-## FOR MULTIDIMENSIONAL DEFAULT VALUE SUPPORT (TICKET 6508) 6Jan20
+## FOR MULTIDIMENSIONAL DEFAULT VALUE SUPPORT UPDATED (TICKET 6574) 20Feb20
 #if($ids.isMultiDimensionalDefaultReg($reg) == "true")
 ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__POR_VALUE(index) (\
     #foreach($field in $ids.get_fields($reg))
     #set($field_name=$ids.get_prop($field,"name"))
     #set($defValtype = $ids.get_prop($field, "default"))
 #if($defValtype == "MultiDimArray")
-    (${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE_ARRAY[index] << ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_SHIFT) | \
+    (${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE(index) << ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_SHIFT) | \
 #else
     (${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE << ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}_SHIFT) | \
 #end
@@ -666,7 +669,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.34
+    CHeader Ver 4.36
     IDS_version : $ids.get_ids_version()
 
     Purpose     : To access the register access data structures.
