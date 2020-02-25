@@ -395,12 +395,16 @@ ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}_WRITEMASK 
 #if(!$ids.getMultiDimensionalFldValList($field).isEmpty())
 ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_name.toUpperCase()}__POR_VALUE(index)\
 #set($CurrIndex=0)
+#set($StartMulDimValRange=1)
+#set($MultiDimensionalFldValListLen=$ids.getMultiDimensionalFldValList($field).size())
+#set($MultiDimensionalFldValReqLen=($MultiDimensionalFldValListLen - 1))
+#set($MultiDimensionalFldValListRange=[$StartMulDimValRange..$MultiDimensionalFldValReqLen])
 #foreach($MultiDimVal in $ids.getMultiDimensionalFldValList($field))
 #set($CurrIndexHexVal="0x" + $INT.toHexString($CurrIndex))
-#if($CurrIndex != 0) : #else   #end(index == ${CurrIndexHexVal} ? ${MultiDimVal} \
-#set($CurrIndex = $CurrIndex + 1)
-#end
-#foreach($MultiDimVal in $ids.getMultiDimensionalFldValList($field)))#end
+#if($CurrIndex < ($MultiDimensionalFldValListLen - 1))
+#if($CurrIndex != 0) : #else    #end(index == ${CurrIndexHexVal} ? ${MultiDimVal} \
+#else
+ : ${MultiDimVal} #end #set($CurrIndex = $CurrIndex + 1) #end #foreach($MultiDimVal in $MultiDimensionalFldValListRange))#end
 
 #end
 #else
