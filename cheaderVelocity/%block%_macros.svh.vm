@@ -266,10 +266,45 @@ $ids.get_header($top)
 #elseif($ids.get_type($secChild)=="reggroup")
 #set($parentName=$ids.get_prop($secObj))
 #SecDefine($secChild $parentName)
+#elseif($ids.get_type($secChild)=="mem")
+#set($MemParentName=$ids.get_prop($secObj))
+#MemDefine($secChild $MemParentName)																			
 #end
 #end
 #end
 ## End Define For Section
+
+## Start Define For Memory
+#macro(MemDefine $MemObj $Tname)
+#set($MemChildname=$ids.get_prop($MemObj,"name"))
+#set($MemParent=$ids.get_parent($MemObj))
+#set($MemParentName=$ids.get_prop($MemObj,"name"))
+#if($MemParentName.equals($topname))
+#set($MemParentOfParentName="")
+#else
+#set($MemParentOfParent=$ids.get_parent($MemParent))
+#set($MemParentOfParentName=$ids.get_prop($MemParentOfParent,"name"))
+#end
+#if($ids.get_type($top)=="board")
+`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_ADDR `${ids.getUniqueName($MemParent,"chip").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($MemObj,"offset"))
+#if ($ids.get_prop($MemObj,"count")==" ")
+`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH 1
+#else
+`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH $ids.get_prop($MemObj,"count")
+#end
+`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($MemObj))
+#elseif($ids.get_type($top)=="chip")
+`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_ADDR `${ids.getUniqueName($MemParent,"block").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($MemObj,"offset"))
+#if ($ids.get_prop($MemObj,"count")==" ")
+`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH 1
+#else
+`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH $ids.get_prop($MemObj,"count")
+#end
+`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($MemObj))
+#else
+#end
+#end
+## End Define For Memory						  
 
 ##Convert hex to decimal
 #macro(Hex2Dec $value)
