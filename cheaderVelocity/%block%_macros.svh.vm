@@ -1,310 +1,108 @@
-
 #set($top=$ids.get_top())
 $ids.get_header($top)
 
 ##########################################################
 ##            Main Body for SV header                     #
+##            Ticket : 6800                               #
 ##########################################################
 #set($topname=$ids.get_prop($top,"name"))
 `ifndef __${topname.toUpperCase()}_SVH
 `define __${topname.toUpperCase()}_SVH
 
-##FOR SUPPORT AT BOARD
-#if($ids.get_type($top)=="board")
-`define ${topname.toUpperCase()}_ADDR 'h$ids.convertToIDSType($ids.get_prop($top,"offset"))
-`define ${topname.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($top,"size"))
-#foreach($chip in $ids.get_objects($top))
-#if($ids.get_type($chip)=="chip")
-#if($linkname.equals(" "))
-#set($chipkName=$linkname)
-#else
-#set($chipName=$ids.get_prop($chip,"name"))
-#end
-`define ${topname.toUpperCase()}_${chipName.toUpperCase()}_ADDR `${topname.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($chip,"address"))
-`define ${topname.toUpperCase()}_${chipName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($chip,"size"))
-#foreach($block in $ids.get_all_block($chip))
-#if($ids.get_type($block)=="block")
-
-
-#if($linkname.equals(" "))
-#set($blockName=$linkname)
-#else
-#set($blockName=$ids.get_prop($block,"name"))
-#end
-##set($blockName=$ids.get_prop($block,"name"))
-`define ${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDR `${topname.toUpperCase()}_${chipName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($block,"offset"))
-`define ${chipName.toUpperCase()}_${blockName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($block,"size"))
-#foreach($blockchild in $ids.get_objects($block))
-#if($ids.get_type($blockchild)=="reg")
-#regDefine($blockchild $blockName)
-#end
-##for For regGroup inside regguoup
-#if($ids.get_type($blockchild)=="reggroup")
-#SecDefine($blockchild $blockName)
-#end
-#if($ids.get_type($blockchild)=="mem")
-#set($childName=$ids.get_prop($blockchild,"name"))
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_ADDR `${chipName.toUpperCase()}_${blockName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($blockchild,"offset"))
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($blockchild,"size"))
-#if ($ids.get_prop($blockchild,"count")==" ")
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_DEPTH 1 ##todo creade count 1
-#else
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_DEPTH $ids.get_prop($blockchild,"count")##todo creade count 1
-#end
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($blockchild))
-#end
-#end
-#end
-#end
-#end
-#end
-##createPackageChip()
-##createPackage1()
-#end
-
-#if($ids.get_type($top)=="chip")
-`define ${topname.toUpperCase()}_ADDR 'h0
-##`define ${topname.toUpperCase()}_ADDR 'h$ids.convertToIDSType($ids.get_prop($top,"offset"))
-`define ${topname.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($top,"size"))
-#foreach($block in $ids.get_objects($top))
-#if($ids.get_type($block)=="block")
-
-
-#if($linkname.equals(" "))
-#set($blockName=$linkname)
-#else
-#set($blockName=$ids.get_prop($block,"name"))
-#end
-##set($blockName=$ids.get_prop($block,"name"))
-`define ${topname.toUpperCase()}_${blockName.toUpperCase()}_ADDR 'h$ids.convertToIDSType($ids.get_prop($block,"address"))
-`define ${topname.toUpperCase()}_${blockName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($block,"size"))
-#foreach($blockchild in $ids.get_objects($block))
-#if($ids.get_type($blockchild)=="reg")
-#regDefine($blockchild $blockName)
-#end
-##for For regGroup inside regguoup
-#if($ids.get_type($blockchild)=="reggroup")
-#SecDefine($blockchild $blockName)
-#end
-#if($ids.get_type($blockchild)=="mem")
-#set($childName=$ids.get_prop($blockchild,"name"))
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_ADDR `${topname}_${blockName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($blockchild,"offset"))
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($blockchild,"size"))
-#if ($ids.get_prop($blockchild,"count")==" ")
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_DEPTH 1 ##todo creade count 1
-#else
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_DEPTH $ids.get_prop($blockchild,"count")##todo creade count 1
-#end
-`define ${blockName.toUpperCase()}_${childName.toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($blockchild))
-#end
-#end
-#end
-#end
-##createPackageChip()
-##createPackage1()
-#end
-##for Block
+##for Block Headers
 #if($ids.get_type($top)=="block")
-`define ${topname.toUpperCase()}_ADDR 'h0
-`define ${topname.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($top,"size"))
-##for register
-#foreach($blockchild in $ids.get_objects($top))
-#if($ids.get_type($blockchild)=="reg")
-#regDefine($blockchild $topname)
-#end
-##for For regGroup inside regguoup
-#if($ids.get_type($blockchild)=="reggroup")
-#SecDefine($blockchild $topname)
-#end
-#if($ids.get_type($blockchild)=="mem")
-#set($childName=$ids.get_prop($blockchild,"name"))
-`define ${topname.toUpperCase()}_${childName.toUpperCase()}_ADDR `${topname.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($blockchild,"offset"))
-`define ${topname.toUpperCase()}_${childName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($blockchild,"size"))
-#if ($ids.get_prop($blockchild,"count")==" ")
-`define ${topname.toUpperCase()}_${childName.toUpperCase()}_DEPTH 1
-#else
-`define ${topname.toUpperCase()}_${childName.toUpperCase()}_DEPTH $ids.get_prop($blockchild,"count")
-#end
-`define ${topname.toUpperCase()}_${childName.toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($blockchild))
-#end
-#end
-##createPackageBlock()
+#BlockDefine($top $top)
 #end
 
 `endif // __${topname.toUpperCase()}_SVH
 
 ## ------------ MACROS -----------------
 ##
+
+## Start Define For Block
+#macro(BlockDefine $BlockObj $TopNodeBlk)
+#set($UniqueBlockName=$ids.getUniqueCompName($BlockObj,$TopNodeBlk))
+#if($BlockObj == $TopNodeBlk)
+`define ${UniqueBlockName.toUpperCase()}_ADDR 'h0
+#else
+#set($parentNodeBlk=$ids.get_parent($BlockObj))
+#set($UniqueBlkParentName=$ids.getUniqueCompName($parentNodeBlk,$TopNodeBlk))
+`define ${UniqueBlockName.toUpperCase()}_ADDR `${UniqueBlkParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($BlockObj,"offset"))
+#end
+`define ${UniqueBlockName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($BlockObj,"size"))
+##for register
+#foreach($blockchild in $ids.get_objects($BlockObj))
+#if($ids.get_type($blockchild)=="reg")
+#regDefine($blockchild $TopNodeBlk)
+#end
+##for For regGroup inside regguoup
+#if($ids.get_type($blockchild)=="reggroup")
+#SecDefine($blockchild $TopNodeBlk)
+#end
+#if($ids.get_type($blockchild)=="mem")
+#MemDefine($blockchild $TopNodeBlk)
+#end
+#end
+#end
+## End Define For Block
+
 ## Start Define For Register
-#macro(regDefine $regObj $Tname)
-#set($childname=$ids.get_prop($regObj,"name"))
-#set($parent=$ids.get_parent($regObj))
-#set($parentName=$ids.get_prop($parent,"name"))
-#if($parentName.equals($topname))
-#set($parentOfParentName="")
-#else
-#set($parentOfParent=$ids.get_parent($parent))
-#set($parentOfParentName=$ids.get_prop($parentOfParent,"name"))
-#end
-#if($Tname.equals($parentName))
-#if($ids.get_type($top)=="board")
-`define ${ids.getUniqueName($regObj,"chip").toUpperCase()}_ADDR `${ids.getUniqueName($parent,"chip").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($regObj,"offset"))
-#elseif($ids.get_type($top)=="chip")
-`define ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR `${ids.getUniqueName($parent,"chip").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($regObj,"offset"))
-#else
-#if($parentOfParentName=="")
-`define ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR `${parentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($regObj,"offset"))
-#else
-`define ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR `${parentOfParentName.toUpperCase()}_${parentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($regObj,"offset"))
-#end
-#end
-#### FOR AT CHIP UNIQUE NAME
-####`define ${ids.getUniqueName($regObj,"reg").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#if($ids.get_type($top).equals("board"))
-`define ${ids.getUniqueName($regObj,"chip").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#elseif($ids.get_type($top).equals("chip") || ($ids.get_type($parent).equals("reggroup")&& $ids.get_prop($parent,"link") != $null))
-`define ${ids.getUniqueName($regObj,"block").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#elseif($ids.get_type($top).equals("block"))
-`define ${ids.getUniqueName($regObj,"reg").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#end
-#foreach($fld in $$ids.get_fields($regObj))
-#set($fldName=$ids.get_prop($fld,"name"))
-#### FOR AT CHIP UNIQUE NAME
-##`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-##`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-####`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#if($ids.get_type($top).equals("board"))
-`define ${ids.getUniqueName($fld,"chip").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-`define ${ids.getUniqueName($fld,"chip").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-`define ${ids.getUniqueName($fld,"chip").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#elseif($ids.get_type($top).equals("chip") || ($ids.get_type($parent).equals("reggroup")&& $ids.get_prop($parent,"link") != $null))
-`define ${ids.getUniqueName($fld,"block").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-`define ${ids.getUniqueName($fld,"block").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-`define ${ids.getUniqueName($fld,"block").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#elseif($ids.get_type($top).equals("block"))
-`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#end
+#macro(regDefine $regObj $topNodeReg)
+#set($parentNodeReg=$ids.get_parent($regObj))
+#set($UniqueRegName=$ids.getUniqueCompName($regObj,$topNodeReg))
+#set($UniqueRegParentName=$ids.getUniqueCompName($parentNodeReg,$topNodeReg))
+`define ${UniqueRegName.toUpperCase()}_ADDR `${UniqueRegParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($regObj,"offset"))
+`define ${UniqueRegName.toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
+#foreach($fld in $ids.get_fields($regObj))
+#set($UniquefldName=$ids.getUniqueCompName($fld,$topNodeReg))
+`define ${UniquefldName.toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
+`define ${UniquefldName.toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
+`define ${UniquefldName.toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
 #end
 #set($repeat=$ids.get_prop($regObj,"count"))
 #if(!$repeat.equals(" "))
-`define ${ids.getUniqueName($regObj,"block").toUpperCase()}_REPEAT $repeat
-#end
-#end
-#if(!$Tname.equals($parentName))
-#set($parentOfParent=$ids.get_parent($parent))
-#set($parentOfparentName=$ids.get_prop($parentOfParent,"name"))
-`define ${ids.getUniqueName($regObj,"block").toUpperCase()}_ADDR `${parentOfparentName.toUpperCase()}_${parentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType(${ids.get_prop($regObj,"offset")})
-#### FOR AT CHIP UNIQUE NAME
-########`define ${ids.getUniqueName($regObj,"reg").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#if($ids.get_type($top).equals("board"))
-`define ${ids.getUniqueName($regObj,"chip").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#elseif($ids.get_type($top).equals("chip") || ($ids.get_type($parent).equals("reggroup")&& $ids.get_prop($parent,"link") != $null))
-`define ${ids.getUniqueName($regObj,"block").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#elseif($ids.get_type($top).equals("block"))
-`define ${ids.getUniqueName($regObj,"reg").toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
-#end
-#foreach($fld in $$ids.get_fields($regObj))
-#set($fldName=$ids.get_prop($fld,"name"))
-#### FOR AT CHIP UNIQUE NAME
-####`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-####`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-######`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#if($ids.get_type($top).equals("board"))
-`define ${ids.getUniqueName($fld,"chip").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-`define ${ids.getUniqueName($fld,"chip").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-`define ${ids.getUniqueName($fld,"chip").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#elseif($ids.get_type($top).equals("chip") || ($ids.get_type($parent).equals("reggroup")&& $ids.get_prop($parent,"link") != $null))
-`define ${ids.getUniqueName($fld,"block").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-`define ${ids.getUniqueName($fld,"block").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-`define ${ids.getUniqueName($fld,"block").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#elseif($ids.get_type($top).equals("block"))
-`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
-`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
-`define ${ids.getUniqueName($fld,"reg").toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
-#end
-#end
-#set($repeat=$ids.get_prop($regObj,"count"))
-#if(!$repeat.equals(" "))
-`define ${Tname.toUpperCase()}_${parentName.toUpperCase()}_${childname.toUpperCase()}_REPEAT $repeat
-#end
+`define ${UniqueRegName.toUpperCase()}_REPEAT $repeat
 #end
 #end
 ## End Define For Register
 
 ## Start Define For Section
-#macro(SecDefine $secObj $Tname)
-#set($childname=$ids.get_prop($secObj,"name"))
-#set($parent=$ids.get_parent($secObj))
-#set($parentName=$ids.get_prop($parent,"name"))
-#if($ids.get_type($top).equals("chip") && !$ids.get_type($parent).equals("reggroup"))
-`define ${parentName.toUpperCase()}_${childname.toUpperCase()}_ADDR `${ids.getUniqueName($parent,"chip").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($secObj,"offset"))
-#else
-#if($ids.get_type($top).equals("chip"))
-`define ${ids.getUniqueName($secObj,"block").toUpperCase()}_ADDR `${ids.getUniqueName($parent,"block").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($secObj,"offset"))
-#elseif(($ids.get_parent($parent) != $null) && $ids.get_type($ids.get_parent($parent)).equals("reggroup"))
-`define ${parentName.toUpperCase()}_${childname.toUpperCase()}_ADDR `${ids.get_prop($ids.get_parent($parent),"name").toUpperCase()}_${parentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($secObj,"offset"))
-#else
-`define ${parentName.toUpperCase()}_${childname.toUpperCase()}_ADDR `${ids.getUniqueName($parent,"block").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($secObj,"offset"))
-#end
-#end
-#if($ids.get_type($top).equals("chip"))
-######`define ${ids.getUniqueName($parent,"block").toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($secObj,"size"))
-##FOR SECTION SIZE NAME
-`define ${ids.getUniqueName($secObj,"block").toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($secObj,"size"))
-#else
-`define ${parentName.toUpperCase()}_${childname.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($secObj,"size"))
-#end
+#macro(SecDefine $secObj $topNodeSec)
+#set($parentNodeSec=$ids.get_parent($secObj))
+#set($UniqueSecName=$ids.getUniqueCompName($secObj,$topNodeSec))
+#set($UniqueSecParentName=$ids.getUniqueCompName($parentNodeSec,$topNodeSec))
+`define ${UniqueSecName.toUpperCase()}_ADDR `${UniqueSecParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($secObj,"offset"))
+`define ${UniqueSecName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($secObj,"size"))
 #set($repeat=$ids.get_prop($secObj,"count"))
 #if(!$repeat.equals(" "))
-`define ${parentName.toUpperCase()}_${childname.toUpperCase()}_REPEAT $repeat
+`define ${UniqueSecName.toUpperCase()}_REPEAT $repeat
 #end
 #foreach($secChild in $ids.get_objects($secObj))
 #if($ids.get_type($secChild)=="reg")
-#regDefine($secChild)
+#regDefine($secChild $topNodeSec)
 #elseif($ids.get_type($secChild)=="reggroup")
-#set($parentName=$ids.get_prop($secObj))
-#SecDefine($secChild $parentName)
+#SecDefine($secChild $topNodeSec)
 #elseif($ids.get_type($secChild)=="mem")
-#set($MemParentName=$ids.get_prop($secObj))
-#MemDefine($secChild $MemParentName)																			
+#MemDefine($secChild $topNodeSec)
 #end
 #end
 #end
 ## End Define For Section
 
 ## Start Define For Memory
-#macro(MemDefine $MemObj $Tname)
-#set($MemChildname=$ids.get_prop($MemObj,"name"))
-#set($MemParent=$ids.get_parent($MemObj))
-#set($MemParentName=$ids.get_prop($MemObj,"name"))
-#if($MemParentName.equals($topname))
-#set($MemParentOfParentName="")
-#else
-#set($MemParentOfParent=$ids.get_parent($MemParent))
-#set($MemParentOfParentName=$ids.get_prop($MemParentOfParent,"name"))
-#end
-#if($ids.get_type($top)=="board")
-`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_ADDR `${ids.getUniqueName($MemParent,"chip").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($MemObj,"offset"))
+#macro(MemDefine $MemObj $topNodeMem)
+#set($parentNodeMem=$ids.get_parent($MemObj))
+#set($UniqueMemName=$ids.getUniqueCompName($MemObj,$topNodeMem))
+#set($UniqueMemParentName=$ids.getUniqueCompName($parentNodeMem,$topNodeMem))
+`define ${UniqueMemName.toUpperCase()}_ADDR `${UniqueMemParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($MemObj,"offset"))
 #if ($ids.get_prop($MemObj,"count")==" ")
-`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH 1
+`define ${UniqueMemName.toUpperCase()}_DEPTH 1
 #else
-`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH $ids.get_prop($MemObj,"count")
+`define ${UniqueMemName.toUpperCase()}_DEPTH $ids.get_prop($MemObj,"count")
 #end
-`define ${ids.getUniqueName($MemParent,"chip").toUpperCase()}_${MemChildname.toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($MemObj))
-#elseif($ids.get_type($top)=="chip")
-`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_ADDR `${ids.getUniqueName($MemParent,"block").toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($MemObj,"offset"))
-#if ($ids.get_prop($MemObj,"count")==" ")
-`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH 1
-#else
-`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_DEPTH $ids.get_prop($MemObj,"count")
+`define ${UniqueMemName.toUpperCase().toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($MemObj))
 #end
-`define ${ids.getUniqueName($MemParent,"block").toUpperCase()}_${MemChildname.toUpperCase()}_MASK $ids.memMask($ids.get_reg_width($MemObj))
-#else
-#end
-#end
-## End Define For Memory						  
+## End Define For Memory
 
 ##Convert hex to decimal
 #macro(Hex2Dec $value)
