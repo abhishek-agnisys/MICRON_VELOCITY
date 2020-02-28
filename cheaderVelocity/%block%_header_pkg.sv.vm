@@ -7,9 +7,159 @@ $ids.get_header($top)
 ##########################################################
 
 #set($topname=$ids.get_prop($top,"name"))
+##for Board Struct
+#if($ids.get_type($top)=="board")
+#createPackageBoard($top $top)
+#end
+##for Chip Struct
+#if($ids.get_type($top)=="chip")
+#createPackageChip($top $top)
+#end
 ##for Block Struct
 #if($ids.get_type($top)=="block")
 #createPackageBlock($top $top)
+#end
+
+#macro(createPackageBoard $BoardObj $TopNodeBoard)
+#set($UniqueBoardName=$ids.getUniqueCompName($BoardObj,$TopNodeBoard))
+
+package ${UniqueBoardName}_header_pkg;
+#foreach($reg in $ids.get_all_reg($BoardObj))
+#if(($ids.get_prop($reg,"type")!="mem") && ($ids.get_prop($ids.get_parent($reg),"type")!="mem"))
+#regStruct($reg $TopNodeBoard)
+#end
+#end
+##Start For Section inside section
+#foreach($section in $ids.get_all_section($BoardObj))
+#sectionStruct($section $TopNodeBoard)
+#end
+##END For Section inside section
+#foreach($blockChild in $ids.get_all_block($BoardObj))
+#set($UniqueBoardBlockName=$ids.getUniqueCompName($blockChild,$TopNodeBoard))
+
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($topChild in $ids.get_objects($blockChild))
+#if($ids.get_type($topChild)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($topChild,"address"),$ids.get_prop($topChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
+#set($UniqueTopRegGrpChildName=$ids.getUniqueCompName($topChild,$TopNodeBoard))
+#if($ids.get_prop($topChild,"count").equals(" "))
+   ${UniqueTopRegGrpChildName} ${ids.get_prop($topChild,"name")};
+#else
+   ${UniqueTopRegGrpChildName}[$ids.get_prop($topChild,"count")] ${ids.get_prop($topChild,"name")};
+#end
+#elseif($ids.get_type($topChild)=="mem")
+#if($ids.get_prop($topChild,"count")==" ")
+   logic [$ids.mem_width($ids.get_reg_width($topChild))] ${ids.get_prop($topChild,"name")};
+#else
+   logic [$ids.mem_width($ids.get_prop($topChild,"count")):0][$ids.mem_width($ids.get_reg_width($topChild)):0] ${ids.get_prop($topChild,"name")};
+#end
+#end
+#end
+} ${UniqueBoardBlockName};
+#end
+## only for top
+
+## only for top Chip
+#foreach($BoardChipChild in $ids.get_objects($BoardObj))
+#if($ids.get_type($BoardChipChild)=="chip")
+#set($UniqueBoardChipName=$ids.getUniqueCompName($BoardChipChild,$TopNodeBoard))
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($BoardBlock in $ids.get_objects($BoardChipChild))
+#if($ids.get_type($BoardBlock)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($BoardBlock,"address"),$ids.get_prop($BoardBlock,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($BoardBlock)=="block")
+#set($UniqueBoardChipBlockName=$ids.getUniqueCompName($BoardBlock,$TopNodeBoard))
+   ${UniqueBoardChipBlockName} ${ids.get_prop($BoardBlock,"name")};
+#end
+#end
+} ${UniqueBoardChipName};
+#end
+#end
+
+## only for top Board
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($BoardChild in $ids.get_objects($BoardObj))
+#if($ids.get_type($BoardChild)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($BoardChild,"address"),$ids.get_prop($BoardChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($BoardChild)=="chip")
+#set($UniquechipChildName=$ids.getUniqueCompName($BoardChild,$TopNodeBoard))
+   ${UniquechipChildName} ${ids.get_prop($BoardChild,"name")};
+#end
+#end
+} ${UniqueBoardName};
+
+endpackage
+#end
+
+#macro(createPackageChip $ChipObj $TopNodeChip)
+#set($UniqueChipName=$ids.getUniqueCompName($ChipObj,$TopNodeChip))
+
+package ${UniqueChipName}_header_pkg;
+#foreach($reg in $ids.get_all_reg($ChipObj))
+#if(($ids.get_prop($reg,"type")!="mem") && ($ids.get_prop($ids.get_parent($reg),"type")!="mem"))
+#regStruct($reg $TopNodeChip)
+#end
+#end
+##Start For Section inside section
+#foreach($section in $ids.get_all_section($ChipObj))
+#sectionStruct($section $TopNodeChip)
+#end
+##END For Section inside section
+#foreach($blockChild in $ids.get_all_block($ChipObj))
+#set($UniqueChipBlockName=$ids.getUniqueCompName($blockChild,$TopNodeChip))
+
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($topChild in $ids.get_objects($blockChild))
+#if($ids.get_type($topChild)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($topChild,"address"),$ids.get_prop($topChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
+#set($UniqueTopRegGrpChildName=$ids.getUniqueCompName($topChild,$TopNodeChip))
+#if($ids.get_prop($topChild,"count").equals(" "))
+   ${UniqueTopRegGrpChildName} ${ids.get_prop($topChild,"name")};
+#else
+   ${UniqueTopRegGrpChildName}[$ids.get_prop($topChild,"count")] ${ids.get_prop($topChild,"name")};
+#end
+#elseif($ids.get_type($topChild)=="mem")
+#if($ids.get_prop($topChild,"count")==" ")
+   logic [$ids.mem_width($ids.get_reg_width($topChild))] ${ids.get_prop($topChild,"name")};
+#else
+   logic [$ids.mem_width($ids.get_prop($topChild,"count")):0][$ids.mem_width($ids.get_reg_width($topChild)):0] ${ids.get_prop($topChild,"name")};
+#end
+#end
+#end
+} ${UniqueChipBlockName};
+#end
+## only for top
+
+## only for top Chip
+typedef struct packed {
+#set($filler_pos=0)
+#foreach($ChipChild in $ids.get_objects($ChipObj))
+#if($ids.get_type($ChipChild)=="emptyspace")
+   logic [$ids.get_filler($ids.get_prop($ChipChild,"address"),$ids.get_prop($ChipChild,"endaddress")):0] filler_$filler_pos;
+#set($filler_pos=$filler_pos+1)
+#end
+#if($ids.get_type($ChipChild)=="block")
+#set($UniqueBlkChildName=$ids.getUniqueCompName($ChipChild,$TopNodeChip))
+   ${UniqueBlkChildName} ${ids.get_prop($ChipChild,"name")};
+#end
+#end
+} ${UniqueChipName};
+
+endpackage
 #end
 
 #macro(createPackageBlock $BlockObj $TopNodeBlk)
@@ -30,7 +180,7 @@ package ${UniqueBlockName}_header_pkg;
 
 typedef struct packed {
 #set($filler_pos=0)
-#foreach($topChild in $ids.get_objects($top))
+#foreach($topChild in $ids.get_objects($BlockObj))
 #if($ids.get_type($topChild)=="emptyspace")
  logic [$ids.get_filler($ids.get_prop($topChild,"address"),$ids.get_prop($topChild,"endaddress")):0] filler_$filler_pos;
 #set($filler_pos=$filler_pos+1)
