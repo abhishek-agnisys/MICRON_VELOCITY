@@ -48,12 +48,14 @@ $ids.get_header($top)
 #set($UniqueChipName=$ids.getUniqueCompName($ChipObj,$TopNodeChip))
 #if($ChipObj == $TopNodeChip)
 `define ${UniqueChipName.toUpperCase()}_ADDR 'h0
+`define ${UniqueChipName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($ChipObj,"size"))
 #else
 #set($parentNodeChip=$ids.get_parent($ChipObj))
 #set($UniqueChipParentName=$ids.getUniqueCompName($parentNodeChip,$TopNodeChip))
-`define ${UniqueChipName.toUpperCase()}_ADDR `${UniqueChipParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($ChipObj,"offset"))
+#set($UniqueChipTopName=$ids.get_prop($TopNodeChip,"name")+"_"+$ids.getUniqueCompName($ChipObj,$TopNodeChip))
+`define ${UniqueChipTopName.toUpperCase()}_ADDR `${UniqueChipParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($ChipObj,"offset"))
+`define ${UniqueChipTopName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($ChipObj,"size"))
 #end
-`define ${UniqueChipName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($ChipObj,"size"))
 ##for blocks
 #foreach($BlockChild in $ids.get_all_block($ChipObj))
 #BlockDefine($BlockChild $TopNodeChip)
@@ -66,12 +68,18 @@ $ids.get_header($top)
 #set($UniqueBlockName=$ids.getUniqueCompName($BlockObj,$TopNodeBlk))
 #if($BlockObj == $TopNodeBlk)
 `define ${UniqueBlockName.toUpperCase()}_ADDR 'h0
+`define ${UniqueBlockName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($BlockObj,"size"))
 #else
 #set($parentNodeBlk=$ids.get_parent($BlockObj))
+#if($parentNodeBlk == $TopNodeBlk)
 #set($UniqueBlkParentName=$ids.getUniqueCompName($parentNodeBlk,$TopNodeBlk))
-`define ${UniqueBlockName.toUpperCase()}_ADDR `${UniqueBlkParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($BlockObj,"offset"))
+#else
+#set($UniqueBlkParentName=$ids.get_prop($TopNodeBlk,"name")+"_"+$ids.getUniqueCompName($parentNodeBlk,$TopNodeBlk))
 #end
-`define ${UniqueBlockName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($BlockObj,"size"))
+#set($UniqueBlkTopName=$ids.get_prop($TopNodeBlk,"name")+"_"+$ids.getUniqueCompName($BlockObj,$TopNodeBlk))
+`define ${UniqueBlkTopName.toUpperCase()}_ADDR `${UniqueBlkParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($BlockObj,"offset"))
+`define ${UniqueBlkTopName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($BlockObj,"size"))
+#end
 ##for register
 #foreach($blockchild in $ids.get_objects($BlockObj))
 #if($ids.get_type($blockchild)=="reg")
@@ -91,12 +99,16 @@ $ids.get_header($top)
 ## Start Define For Register
 #macro(regDefine $regObj $topNodeReg)
 #set($parentNodeReg=$ids.get_parent($regObj))
-#set($UniqueRegName=$ids.getUniqueCompName($regObj,$topNodeReg))
+#set($UniqueRegName=$ids.get_prop($topNodeReg,"name")+"_"+$ids.getUniqueCompName($regObj,$topNodeReg))
+#if($parentNodeReg == $topNodeReg)
 #set($UniqueRegParentName=$ids.getUniqueCompName($parentNodeReg,$topNodeReg))
+#else
+#set($UniqueRegParentName=$ids.get_prop($topNodeReg,"name")+"_"+$ids.getUniqueCompName($parentNodeReg,$topNodeReg))
+#end
 `define ${UniqueRegName.toUpperCase()}_ADDR `${UniqueRegParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($regObj,"offset"))
 `define ${UniqueRegName.toUpperCase()}_DEFAULT #getValue($ids.get_prop($regObj,"default"))
 #foreach($fld in $ids.get_fields($regObj))
-#set($UniquefldName=$ids.getUniqueCompName($fld,$topNodeReg))
+#set($UniquefldName=$ids.get_prop($topNodeReg,"name")+"_"+$ids.getUniqueCompName($fld,$topNodeReg))
 `define ${UniquefldName.toUpperCase()}_MSB $ids.get_prop($fld,"high_offset")
 `define ${UniquefldName.toUpperCase()}_LSB $ids.get_prop($fld,"low_offset")
 `define ${UniquefldName.toUpperCase()}_DEFAULT 'b$ids.get_prop($fld,"default")
@@ -111,8 +123,12 @@ $ids.get_header($top)
 ## Start Define For Section
 #macro(SecDefine $secObj $topNodeSec)
 #set($parentNodeSec=$ids.get_parent($secObj))
-#set($UniqueSecName=$ids.getUniqueCompName($secObj,$topNodeSec))
+#set($UniqueSecName=$ids.get_prop($topNodeSec,"name")+"_"+$ids.getUniqueCompName($secObj,$topNodeSec))
+#if($parentNodeSec == $topNodeSec)
 #set($UniqueSecParentName=$ids.getUniqueCompName($parentNodeSec,$topNodeSec))
+#else
+#set($UniqueSecParentName=$ids.get_prop($topNodeSec,"name")+"_"+$ids.getUniqueCompName($parentNodeSec,$topNodeSec))
+#end
 `define ${UniqueSecName.toUpperCase()}_ADDR `${UniqueSecParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($secObj,"offset"))
 `define ${UniqueSecName.toUpperCase()}_SIZE 'h$ids.convertToIDSType($ids.get_prop($secObj,"size"))
 #set($repeat=$ids.get_prop($secObj,"count"))
@@ -134,8 +150,12 @@ $ids.get_header($top)
 ## Start Define For Memory
 #macro(MemDefine $MemObj $topNodeMem)
 #set($parentNodeMem=$ids.get_parent($MemObj))
-#set($UniqueMemName=$ids.getUniqueCompName($MemObj,$topNodeMem))
+#set($UniqueMemName=$ids.get_prop($topNodeMem,"name")+"_"+$ids.getUniqueCompName($MemObj,$topNodeMem))
+#if($parentNodeMem == $topNodeMem)
 #set($UniqueMemParentName=$ids.getUniqueCompName($parentNodeMem,$topNodeMem))
+#else
+#set($UniqueMemParentName=$ids.get_prop($topNodeMem,"name")+"_"+$ids.getUniqueCompName($parentNodeMem,$topNodeMem))
+#end
 `define ${UniqueMemName.toUpperCase()}_ADDR `${UniqueMemParentName.toUpperCase()}_ADDR + 'h$ids.convertToIDSType($ids.get_prop($MemObj,"offset"))
 #if ($ids.get_prop($MemObj,"count")==" ")
 `define ${UniqueMemName.toUpperCase()}_DEPTH 1
