@@ -35,7 +35,7 @@ package ${UniqueBoardName}_header_pkg;
 #end
 ##END For Section inside section
 #foreach($blockChild in $ids.get_all_block($BoardObj))
-#set($UniqueBoardBlockName=$ids.getUniqueCompName($blockChild,$TopNodeBoard))
+#set($UniqueBoardBlockName=$ids.get_prop($TopNodeBoard,"name")+"_"+$ids.getUniqueCompName($blockChild,$TopNodeBoard))
 
 typedef struct packed {
 #set($filler_pos=0)
@@ -45,7 +45,7 @@ typedef struct packed {
 #set($filler_pos=$filler_pos+1)
 #end
 #if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
-#set($UniqueTopRegGrpChildName=$ids.getUniqueCompName($topChild,$TopNodeBoard))
+#set($UniqueTopRegGrpChildName=$ids.get_prop($TopNodeBoard,"name")+"_"+$ids.getUniqueCompName($topChild,$TopNodeBoard))
 #if($ids.get_prop($topChild,"count").equals(" "))
    ${UniqueTopRegGrpChildName} ${ids.get_prop($topChild,"name")};
 #else
@@ -66,7 +66,7 @@ typedef struct packed {
 ## only for top Chip
 #foreach($BoardChipChild in $ids.get_objects($BoardObj))
 #if($ids.get_type($BoardChipChild)=="chip")
-#set($UniqueBoardChipName=$ids.getUniqueCompName($BoardChipChild,$TopNodeBoard))
+#set($UniqueBoardChipName=$ids.get_prop($TopNodeBoard,"name")+"_"+$ids.getUniqueCompName($BoardChipChild,$TopNodeBoard))
 typedef struct packed {
 #set($filler_pos=0)
 #foreach($BoardBlock in $ids.get_objects($BoardChipChild))
@@ -75,7 +75,7 @@ typedef struct packed {
 #set($filler_pos=$filler_pos+1)
 #end
 #if($ids.get_type($BoardBlock)=="block")
-#set($UniqueBoardChipBlockName=$ids.getUniqueCompName($BoardBlock,$TopNodeBoard))
+#set($UniqueBoardChipBlockName=$ids.get_prop($TopNodeBoard,"name")+"_"+$ids.getUniqueCompName($BoardBlock,$TopNodeBoard))
    ${UniqueBoardChipBlockName} ${ids.get_prop($BoardBlock,"name")};
 #end
 #end
@@ -92,7 +92,7 @@ typedef struct packed {
 #set($filler_pos=$filler_pos+1)
 #end
 #if($ids.get_type($BoardChild)=="chip")
-#set($UniquechipChildName=$ids.getUniqueCompName($BoardChild,$TopNodeBoard))
+#set($UniquechipChildName=$ids.get_prop($TopNodeBoard,"name")+"_"+$ids.getUniqueCompName($BoardChild,$TopNodeBoard))
    ${UniquechipChildName} ${ids.get_prop($BoardChild,"name")};
 #end
 #end
@@ -116,7 +116,7 @@ package ${UniqueChipName}_header_pkg;
 #end
 ##END For Section inside section
 #foreach($blockChild in $ids.get_all_block($ChipObj))
-#set($UniqueChipBlockName=$ids.getUniqueCompName($blockChild,$TopNodeChip))
+#set($UniqueChipBlockName=$ids.get_prop($TopNodeChip,"name")+"_"+$ids.getUniqueCompName($blockChild,$TopNodeChip))
 
 typedef struct packed {
 #set($filler_pos=0)
@@ -126,7 +126,7 @@ typedef struct packed {
 #set($filler_pos=$filler_pos+1)
 #end
 #if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
-#set($UniqueTopRegGrpChildName=$ids.getUniqueCompName($topChild,$TopNodeChip))
+#set($UniqueTopRegGrpChildName=$ids.get_prop($TopNodeChip,"name")+"_"+$ids.getUniqueCompName($topChild,$TopNodeChip))
 #if($ids.get_prop($topChild,"count").equals(" "))
    ${UniqueTopRegGrpChildName} ${ids.get_prop($topChild,"name")};
 #else
@@ -153,7 +153,7 @@ typedef struct packed {
 #set($filler_pos=$filler_pos+1)
 #end
 #if($ids.get_type($ChipChild)=="block")
-#set($UniqueBlkChildName=$ids.getUniqueCompName($ChipChild,$TopNodeChip))
+#set($UniqueBlkChildName=$ids.get_prop($TopNodeChip,"name")+"_"+$ids.getUniqueCompName($ChipChild,$TopNodeChip))
    ${UniqueBlkChildName} ${ids.get_prop($ChipChild,"name")};
 #end
 #end
@@ -186,7 +186,7 @@ typedef struct packed {
 #set($filler_pos=$filler_pos+1)
 #end
 #if($ids.get_type($topChild)=="reggroup" || $ids.get_type($topChild)=="reg")
-#set($UniqueTopRegGrpChildName=$ids.getUniqueCompName($topChild,$TopNodeBlk))
+#set($UniqueTopRegGrpChildName=$ids.get_prop($TopNodeBlk,"name")+"_"+$ids.getUniqueCompName($topChild,$TopNodeBlk))
 #if($ids.get_prop($topChild,"count").equals(" "))
    ${UniqueTopRegGrpChildName} ${ids.get_prop($topChild,"name")};
 #else
@@ -209,7 +209,7 @@ endpackage
 #macro (sectionStruct $secObj $topNodeSec)
 
 #if($ids.get_type($secObj)!="mem")
-#set($UniqueSecName=$ids.getUniqueCompName($secObj,$topNodeSec))
+#set($UniqueSecName=$ids.get_prop($topNodeSec,"name")+"_"+$ids.getUniqueCompName($secObj,$topNodeSec))
 typedef struct packed {
 #set($parant=${ids.get_parent($secObj)})
 #set($filler_pos=0)
@@ -219,11 +219,11 @@ typedef struct packed {
 #set($filler_pos=$filler_pos+1)
 #end
 #if($ids.get_type($secObjChild)=="reggroup")
-#set($UniqueRegGrpChildName=$ids.getUniqueCompName($secObjChild,$topNodeSec))
+#set($UniqueRegGrpChildName=$ids.get_prop($topNodeSec,"name")+"_"+$ids.getUniqueCompName($secObjChild,$topNodeSec))
    ${UniqueRegGrpChildName} ${ids.get_prop($secObjChild,"name")};
 #end
 #if($ids.get_type($secObjChild)=="reg")
-#set($UniqueRegChildName=$ids.getUniqueCompName($secObjChild,$topNodeSec))
+#set($UniqueRegChildName=$ids.get_prop($topNodeSec,"name")+"_"+$ids.getUniqueCompName($secObjChild,$topNodeSec))
 #if($ids.get_prop($secObjChild,"count").equals(" "))
     ${UniqueRegChildName} ${ids.get_prop($secObjChild,"name")};
 #else
@@ -241,7 +241,7 @@ typedef struct packed {
 
 ## Start Macro for Register Structure
 #macro (regStruct $regObj $topNodeReg)
-#set($UniqueRegName=$ids.getUniqueCompName($regObj,$topNodeReg))
+#set($UniqueRegName=$ids.get_prop($topNodeReg,"name")+"_"+$ids.getUniqueCompName($regObj,$topNodeReg))
 /*-------------------------------------------
 Reg: ${UniqueRegName.toUpperCase()}
 $ids.get_prop($regObj,"doc")
