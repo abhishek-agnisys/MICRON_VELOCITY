@@ -413,6 +413,7 @@ ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${field_n
 #end
 #end
 
+${hash}ifndef ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__POR_VALUE
 ## FOR MULTIDIMENSIONAL DEFAULT VALUE SUPPORT UPDATED (TICKET 6574) 20Feb20
 #if($ids.isMultiDimensionalDefaultReg($reg) == "true")
 ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__POR_VALUE(index) (\
@@ -434,6 +435,7 @@ ${hash}${def} ${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__POR_VALUE
     #end
     0)
 #end
+${hash}endif
 
 #foreach($field in $ids.get_fields($reg))
 #set($fieldName=$ids.get_prop($field,"name"))
@@ -673,7 +675,7 @@ ${hash}${def} WR_${blkInstName.toUpperCase()}__${hiername.toUpperCase()}__${fiel
     Micron Technology, Inc.  Use, disclosure, or reproduction is prohibited
     without the prior express written permission of Micron Technology, Inc.
 
-    CHeader Ver 4.36
+    CHeader Ver 4.38
     IDS_version : $ids.get_ids_version()
 
     Purpose     : To access the register access data structures.
